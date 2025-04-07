@@ -1,0 +1,67 @@
+<scenarios>
+    <scenario>
+        <_id>rentrer_a_la_maison</_id>
+        <description>Vous rentrez chez vous après une longue journée.</description>
+        <action>
+            <possible_scenario_id>
+                <choice>
+                    <id>manger</id>
+                    <text>Prendre un repas</text>
+                </choice>
+                <choice>
+                    <id>dormir</id>
+                    <text>Aller dormir</text>
+                </choice>
+                <choice>
+                    <id>regarder_la_tv</id>
+                    <text>Regarder la télé</text>
+                </choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>manger</_id>
+        <description>Vous prenez un repas.</description>
+        <action>
+            <effect>
+                <e>hunger + 50</e>
+                <e>money - 10</e>
+            </effect>
+            <possible_scenario_id />
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>dormir</_id>
+        <description>Vous allez dormir pour récupérer.</description>
+        <action>
+            <effect>
+                <e>health + 40</e>
+                <e>power + 10</e>
+            </effect>
+            <possible_scenario_id />
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>regarder_la_tv</_id>
+        <description>Vous regardez un film ou une série.</description>
+        <action>
+            <effect>
+                <e>stress - 20%</e>
+                <e>energie - 10</e>
+            </effect>
+            <possible_scenario_id>
+                <choice>
+                    <id>dormir</id>
+                    <text>Aller dormir</text>
+                </choice>
+                <choice>
+                    <id>manger</id>
+                    <text>Prendre un repas</text>
+                </choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+</scenarios>

@@ -1,0 +1,66 @@
+<scenarios>
+    <scenario>
+        <_id>entrer_a_lhopital</_id>
+        <description>Vous entrez à l'hôpital pour recevoir des soins.</description>
+        <action>
+            <possible_scenario_id>
+                <choice>
+                    <id>voir_un_medecin</id>
+                    <text>Consulter un médecin</text>
+                </choice>
+                <choice>
+                    <id>attendre_aux_urgences</id>
+                    <text>Attendre aux urgences</text>
+                </choice>
+                <choice>
+                    <id>partir_sans_soins</id>
+                    <text>Partir sans soins</text>
+                </choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>voir_un_medecin</_id>
+        <description>Un médecin vous examine et vous prescrit un traitement.</description>
+        <action>
+            <effect>
+                <e>health + 50</e>
+                <e>money - 20</e>
+            </effect>
+            <possible_scenario_id />
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>attendre_aux_urgences</_id>
+        <description>Vous attendez votre tour aux urgences.</description>
+        <action>
+            <effect>
+                <e>health + 10</e>
+                <e>hunger - 10</e>
+            </effect>
+            <possible_scenario_id>
+                <choice>
+                    <id>voir_un_medecin</id>
+                    <text>Consulter un médecin</text>
+                </choice>
+                <choice>
+                    <id>partir_sans_soins</id>
+                    <text>Partir sans soins</text>
+                </choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>partir_sans_soins</_id>
+        <description>Vous décidez de quitter l'hôpital sans recevoir de soins.</description>
+        <action>
+            <effect>
+                <e>health - 10</e>
+            </effect>
+            <possible_scenario_id />
+        </action>
+    </scenario>
+</scenarios>

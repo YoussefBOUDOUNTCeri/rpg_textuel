@@ -1,0 +1,192 @@
+<scenarios>
+    <scenario>
+        <_id>arriver_sur_la_plage</_id>
+        <description>Vous arrivez sur la plage, l'air est frais et la mer scintille au loin.</description>
+        <action>
+            <possible_scenario_id>
+                <choice><id>se_baigner</id><text>Aller se baigner</text></choice>
+                <choice><id>se_reposer</id><text>Se reposer sur le sable</text></choice>
+                <choice><id>parler_avec_un_local</id><text>Parler à un habitant</text></choice>
+                <choice><id>frapper_quelquun</id><text>Frapper quelqu'un</text></choice>
+                <choice><id>prendre_son_argent</id><text>Voler quelqu’un</text></choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>se_baigner</_id>
+        <description>Vous vous plongez dans l'eau fraîche et agréable.</description>
+        <action>
+            <effect>
+                <e>health + 10</e>
+                <e>hunger - 5</e>
+            </effect>
+            <possible_scenario_id />
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>se_reposer</_id>
+        <description>Vous vous allongez sur le sable pour profiter du soleil.</description>
+        <action>
+            <effect>
+                <e>health + 5</e>
+                <e>aura + 5%</e>
+            </effect>
+            <possible_scenario_id>
+                <choice><id>se_baigner</id><text>Aller se baigner</text></choice>
+                <choice><id>parler_avec_un_local</id><text>Parler à un habitant</text></choice>
+                <choice><id>frapper_quelquun</id><text>Frapper quelqu'un</text></choice>
+                <choice><id>prendre_son_argent</id><text>Voler quelqu’un</text></choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>parler_avec_un_local</_id>
+        <description>Vous engagez la conversation avec un habitant de la région.</description>
+        <action>
+            <possible_scenario_id>
+                <choice><id>acheter_des_fruits</id><text>Acheter des fruits</text></choice>
+                <choice><id>demander_des_informations</id><text>Demander des infos</text></choice>
+                <choice><id>refuser_de_parler</id><text>Refuser de parler</text></choice>
+                <choice><id>frapper_quelquun</id><text>Frapper la personne</text></choice>
+                <choice><id>prendre_son_argent</id><text>Voler son argent</text></choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>acheter_des_fruits</_id>
+        <description>Le local vous propose des fruits frais à acheter.</description>
+        <action>
+            <effect>
+                <e>hunger + 20</e>
+                <e>aura + 10%</e>
+            </effect>
+            <possible_scenario_id>
+                <choice><id>se_reposer</id><text>Se reposer sur le sable</text></choice>
+                <choice><id>se_baigner</id><text>Aller se baigner</text></choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>demander_des_informations</_id>
+        <description>Vous demandez des conseils pour explorer les environs.</description>
+        <action>
+            <effect>
+                <e>aura + 15%</e>
+            </effect>
+            <possible_scenario_id>
+                <choice><id>explorer_la_plage</id><text>Explorer la plage</text></choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>refuser_de_parler</_id>
+        <description>Vous préférez ne pas discuter avec le local.</description>
+        <action>
+            <effect>
+                <e>aura - 5%</e>
+            </effect>
+            <possible_scenario_id>
+                <choice><id>se_baigner</id><text>Aller se baigner</text></choice>
+                <choice><id>se_reposer</id><text>Se reposer sur le sable</text></choice>
+                <choice><id>frapper_quelquun</id><text>Frapper quelqu'un</text></choice>
+                <choice><id>prendre_son_argent</id><text>Voler quelqu’un</text></choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>explorer_la_plage</_id>
+        <description>Vous partez explorer la plage, curieux de découvrir les alentours.</description>
+        <action>
+            <effect>
+                <e>health + 10</e>
+            </effect>
+            <possible_scenario_id>
+                <choice><id>arriver_sur_la_plage</id><text>Retourner au point de départ</text></choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>frapper_quelquun</_id>
+        <description>Vous décidez de frapper quelqu'un sur la plage.</description>
+        <action>
+            <effect>
+                <e>aura - 20%</e>
+                <e>health - 5</e>
+            </effect>
+            <possible_scenario_id>
+                <choice><id>fin_frapper_quelquun</id><text>Accepter les conséquences</text></choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>prendre_son_argent</_id>
+        <description>Vous prenez l'argent de la personne que vous avez attaquée.</description>
+        <action>
+            <effect>
+                <e>money + 50</e>
+                <e>aura - 30%</e>
+            </effect>
+            <possible_scenario_id>
+                <choice><id>fin_prendre_son_argent</id><text>Quitter discrètement</text></choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <!-- Fins -->
+    <scenario>
+        <_id>fin_se_baigner</_id>
+        <description>Vous avez fini de vous baigner et vous êtes prêt à continuer.</description>
+        <action><possible_scenario_id /></action>
+    </scenario>
+
+    <scenario>
+        <_id>fin_se_reposer</_id>
+        <description>Vous avez terminé de vous reposer et vous êtes prêt à partir.</description>
+        <action><possible_scenario_id /></action>
+    </scenario>
+
+    <scenario>
+        <_id>fin_acheter_des_fruits</_id>
+        <description>Vous avez acheté des fruits et êtes satisfait de votre achat.</description>
+        <action><possible_scenario_id /></action>
+    </scenario>
+
+    <scenario>
+        <_id>fin_demander_des_informations</_id>
+        <description>Vous avez reçu toutes les informations nécessaires et pouvez explorer la plage.</description>
+        <action><possible_scenario_id /></action>
+    </scenario>
+
+    <scenario>
+        <_id>fin_refuser_de_parler</_id>
+        <description>Vous avez refusé de parler et avez choisi de partir seul.</description>
+        <action><possible_scenario_id /></action>
+    </scenario>
+
+    <scenario>
+        <_id>fin_explorer_la_plage</_id>
+        <description>Vous avez exploré la plage et êtes maintenant prêt à partir.</description>
+        <action><possible_scenario_id /></action>
+    </scenario>
+
+    <scenario>
+        <_id>fin_frapper_quelquun</_id>
+        <description>Vous avez frappé quelqu'un et cela a causé une altercation. Vous devez maintenant faire face aux conséquences.</description>
+        <action><possible_scenario_id /></action>
+    </scenario>
+
+    <scenario>
+        <_id>fin_prendre_son_argent</_id>
+        <description>Vous avez pris l'argent et vous partez avant que quelqu'un ne remarque.</description>
+        <action><possible_scenario_id /></action>
+    </scenario>
+</scenarios>

@@ -1,0 +1,86 @@
+<scenarios>
+    <scenario>
+        <_id>arriver_au_centre_ville</_id>
+        <description>Vous arrivez au centre-ville, un lieu animé où les gens vont et viennent. Plusieurs commerces s'offrent à vous.</description>
+        <action>
+            <possible_scenario_id>
+                <choice>
+                    <id>aller_boulangerie</id>
+                    <text>Aller à la boulangerie</text>
+                </choice>
+                <choice>
+                    <id>entrer_superette</id>
+                    <text>Entrer dans la supérette</text>
+                </choice>
+                <choice>
+                    <id>visiter_boutique_vetements</id>
+                    <text>Visiter une boutique de vêtements</text>
+                </choice>
+                <choice>
+                    <id>repartir_du_centre_ville</id>
+                    <text>Quitter le centre-ville</text>
+                </choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <!-- Exemple de sous-scenarios (non détaillés ici mais indispensables) -->
+    <scenario>
+        <_id>aller_boulangerie</_id>
+        <description>Vous entrez dans une boulangerie où l’odeur du pain chaud embaume l’air.</description>
+        <action>
+            <possible_scenario_id>
+                <choice>
+                    <id>acheter_croissant</id>
+                    <text>Acheter un croissant</text>
+                </choice>
+                <choice>
+                    <id>ne_rien_acheter</id>
+                    <text>Ressortir sans rien acheter</text>
+                </choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>entrer_superette</_id>
+        <description>Vous entrez dans une petite supérette de quartier.</description>
+        <action>
+            <possible_scenario_id>
+                <choice>
+                    <id>acheter_bouteille_eau</id>
+                    <text>Acheter une bouteille d’eau</text>
+                </choice>
+                <choice>
+                    <id>ne_rien_acheter</id>
+                    <text>Ressortir les mains vides</text>
+                </choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>visiter_boutique_vetements</_id>
+        <description>Vous entrez dans une boutique de vêtements avec des habits dernier cri.</description>
+        <action>
+            <possible_scenario_id>
+                <choice>
+                    <id>essayer_une_chemise</id>
+                    <text>Essayer une chemise</text>
+                </choice>
+                <choice>
+                    <id>ne_rien_acheter</id>
+                    <text>Regarder sans rien acheter</text>
+                </choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>repartir_du_centre_ville</_id>
+        <description>Vous décidez de quitter le centre-ville pour continuer votre aventure ailleurs.</description>
+        <action>
+            <possible_scenario_id />
+        </action>
+    </scenario>
+</scenarios>

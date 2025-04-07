@@ -1,0 +1,140 @@
+<scenarios>
+    <scenario>
+        <_id>entrer_supermarche</_id>
+        <description>Vous entrez dans un supermarché bien achalandé. Les rayons sont pleins, l’ambiance est vivante.</description>
+        <action>
+            <possible_scenario_id>
+                <choice>
+                    <id>acheter_nourriture</id>
+                    <text>Aller au rayon alimentation</text>
+                </choice>
+                <choice>
+                    <id>acheter_soins</id>
+                    <text>Aller au rayon santé et hygiène</text>
+                </choice>
+                <choice>
+                    <id>acheter_objets_inutiles</id>
+                    <text>Parcourir le rayon bazar</text>
+                </choice>
+                <choice>
+                    <id>voler_article</id>
+                    <text>Voler discrètement un article</text>
+                </choice>
+                <choice>
+                    <id>quitter_supermarche</id>
+                    <text>Quitter le supermarché</text>
+                </choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>acheter_nourriture</_id>
+        <description>Vous prenez quelques produits alimentaires essentiels.</description>
+        <action>
+            <effect>
+                <e>money - 30</e>
+                <e>hunger + 40</e>
+            </effect>
+            <possible_scenario_id>
+                <choice>
+                    <id>entrer_supermarche</id>
+                    <text>Retour au supermarché</text>
+                </choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>acheter_soins</_id>
+        <description>Vous achetez quelques produits pour améliorer votre bien-être.</description>
+        <action>
+            <effect>
+                <e>money - 50</e>
+                <e>health + 25</e>
+            </effect>
+            <possible_scenario_id>
+                <choice>
+                    <id>entrer_supermarche</id>
+                    <text>Retour au supermarché</text>
+                </choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>acheter_objets_inutiles</_id>
+        <description>Vous craquez pour un objet qui ne sert à rien, mais vous fait sourire.</description>
+        <action>
+            <effect>
+                <e>money - 20</e>
+                <e>humeur + 10%</e>
+            </effect>
+            <possible_scenario_id>
+                <choice>
+                    <id>entrer_supermarche</id>
+                    <text>Retour au supermarché</text>
+                </choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>voler_article</_id>
+        <description>Vous tentez de voler un petit article discrètement...</description>
+        <action>
+            <possible_scenario_id>
+                <choice>
+                    <id>reussite_vol</id>
+                    <text>Succès : personne ne vous voit</text>
+                </choice>
+                <choice>
+                    <id>echec_vol</id>
+                    <text>Échec : vous êtes attrapé</text>
+                </choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>reussite_vol</_id>
+        <description>Vous avez volé un article sans vous faire remarquer.</description>
+        <action>
+            <effect>
+                <e>hunger + 15</e>
+                <e>aura - 10%</e>
+            </effect>
+            <possible_scenario_id>
+                <choice>
+                    <id>entrer_supermarche</id>
+                    <text>Retour au supermarché</text>
+                </choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>echec_vol</_id>
+        <description>Un agent de sécurité vous intercepte. Vous êtes expulsé.</description>
+        <action>
+            <effect>
+                <e>aura - 25%</e>
+                <e>money - 50</e>
+            </effect>
+            <possible_scenario_id>
+                <choice>
+                    <id>quitter_supermarche</id>
+                    <text>Quitter le supermarché</text>
+                </choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>quitter_supermarche</_id>
+        <description>Vous quittez le supermarché et retournez dans la rue.</description>
+        <action>
+            <possible_scenario_id />
+        </action>
+    </scenario>
+</scenarios>

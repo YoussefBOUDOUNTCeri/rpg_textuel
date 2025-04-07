@@ -1,0 +1,66 @@
+<scenarios>
+    <scenario>
+        <_id>aller_au_gym</_id>
+        <description>Vous entrez dans la salle de sport.</description>
+        <action>
+            <possible_scenario_id>
+                <choice>
+                    <id>faire_musculation</id>
+                    <text>Faire de la musculation</text>
+                </choice>
+                <choice>
+                    <id>faire_cardio</id>
+                    <text>Faire du cardio</text>
+                </choice>
+                <choice>
+                    <id>quitter_gym</id>
+                    <text>Quitter la salle</text>
+                </choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>faire_musculation</_id>
+        <description>Vous faites une séance de musculation intense.</description>
+        <action>
+            <effect>
+                <e>power + 30</e>
+                <e>hunger - 15</e>
+                <e>health - 5</e>
+            </effect>
+            <possible_scenario_id>
+                <choice>
+                    <id>quitter_gym</id>
+                    <text>Quitter la salle</text>
+                </choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>faire_cardio</_id>
+        <description>Vous courez sur le tapis de course.</description>
+        <action>
+            <effect>
+                <e>health + 20</e>
+                <e>hunger - 10</e>
+                <e>power + 10</e>
+            </effect>
+            <possible_scenario_id>
+                <choice>
+                    <id>quitter_gym</id>
+                    <text>Quitter la salle</text>
+                </choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>quitter_gym</_id>
+        <description>Vous décidez de quitter la salle de sport.</description>
+        <action>
+            <possible_scenario_id />
+        </action>
+    </scenario>
+</scenarios>

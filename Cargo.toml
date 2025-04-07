@@ -1,0 +1,26 @@
+[package]
+name = "rpg_textuel"
+version = "0.1.0"
+edition = "2021"
+
+authors = ["Youssef BOUDOUNT <votre.adresse@example.com>"]
+description = "Un RPG textuel Rust orienté simulation, basé sur un monde évolutif."
+license = "MIT"
+repository = "https://github.com/votre-utilisateur/rpg_textuel"
+documentation = "https://docs.rs/rpg_textuel"
+homepage = "https://github.com/votre-utilisateur/rpg_textuel"
+readme = "README.md"
+keywords = ["rpg", "jeu", "simulation", "rust"]
+categories = ["game-development", "rust-patterns"]
+
+[dependencies]
+serde = "1.0"
+serde_derive = "1.0"
+serde-xml-rs = "0.5.1"
+quick-xml = "0.26.0"
+
+[dev-dependencies]
+
+[profile.release]
+lto = true
+debug = false

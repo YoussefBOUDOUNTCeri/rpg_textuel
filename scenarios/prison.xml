@@ -1,0 +1,123 @@
+<scenarios>
+    <scenario>
+        <_id>entrer_en_prison</_id>
+        <description>Entrer dans la prison.</description>
+        <action>
+            <effect />
+            <possible_scenario_id>
+                <choice>
+                    <id>finir_peine_complète</id>
+                    <text>Accepter de purger toute la peine</text>
+                </choice>
+                <choice>
+                    <id>parler_avec_un_policier</id>
+                    <text>Parler à un policier</text>
+                </choice>
+                <choice>
+                    <id>parler_avec_le_juge</id>
+                    <text>Discuter avec le juge</text>
+                </choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>finir_peine_complète</_id>
+        <description>Vous allez purger toute la durée de votre peine en prison.</description>
+        <action>
+            <effect>
+                <e>aura - 50%</e>
+                <e>hunger - 20</e>
+                <e>health - 15</e>
+                <e>power + 20</e>
+            </effect>
+            <possible_scenario_id />
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>parler_avec_un_policier</_id>
+        <description>Vous souhaitez donner de l'argent au policier pour être libéré.</description>
+        <action>
+            <possible_scenario_id>
+                <choice>
+                    <id>proposition_du_policier</id>
+                    <text>Proposer un pot-de-vin</text>
+                </choice>
+                <choice>
+                    <id>refuser_ou_annuler</id>
+                    <text>Annuler et retourner en cellule</text>
+                </choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>proposition_du_policier</_id>
+        <description>Le policier accepte de vous libérer si vous lui donnez une somme d'argent.</description>
+        <action>
+            <possible_scenario_id>
+                <choice>
+                    <id>donner_largent</id>
+                    <text>Donner l'argent</text>
+                </choice>
+                <choice>
+                    <id>refuser_ou_annuler</id>
+                    <text>Refuser ou annuler</text>
+                </choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>donner_largent</_id>
+        <description>Vous avez donné l'argent demandé.</description>
+        <action>
+            <effect>
+                <e>aura + 30%</e>
+            </effect>
+            <possible_scenario_id />
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>refuser_ou_annuler</_id>
+        <description>Vous refusez de payer ou vous n'avez pas assez d'argent.</description>
+        <action>
+            <effect>
+                <e>aura - 5%</e>
+            </effect>
+            <possible_scenario_id />
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>parler_avec_le_juge</_id>
+        <description>Vous voulez négocier avec le juge pour payer une amende au lieu de rester en prison.</description>
+        <action>
+            <possible_scenario_id>
+                <choice>
+                    <id>proposition_du_juge</id>
+                    <text>Négocier une libération avec amende</text>
+                </choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>proposition_du_juge</_id>
+        <description>Le juge accepte de vous libérer si vous payez une somme d'argent.</description>
+        <action>
+            <possible_scenario_id>
+                <choice>
+                    <id>donner_largent</id>
+                    <text>Payer l'amende</text>
+                </choice>
+                <choice>
+                    <id>refuser_ou_annuler</id>
+                    <text>Refuser ou abandonner</text>
+                </choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+</scenarios>

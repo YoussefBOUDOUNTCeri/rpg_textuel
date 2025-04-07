@@ -1,0 +1,104 @@
+<scenarios>
+    <scenario>
+        <_id>arriver_a_la_banque</_id>
+        <description>Vous entrez dans la banque. L’atmosphère est calme, les employés s'affairent derrière leurs guichets.</description>
+        <action>
+            <possible_scenario_id>
+                <choice>
+                    <id>retirer_argent</id>
+                    <text>Retirer de l'argent</text>
+                </choice>
+                <choice>
+                    <id>deposer_argent</id>
+                    <text>Déposer de l'argent</text>
+                </choice>
+                <choice>
+                    <id>ouvrir_compte_epargne</id>
+                    <text>Ouvrir un compte épargne</text>
+                </choice>
+                <choice>
+                    <id>parler_conseiller</id>
+                    <text>Discuter avec un conseiller</text>
+                </choice>
+                <choice>
+                    <id>quitter_banque</id>
+                    <text>Quitter la banque</text>
+                </choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>retirer_argent</_id>
+        <description>Vous vous approchez du distributeur ou du guichet pour retirer de l'argent.</description>
+        <action>
+            <effect>
+                <e>money + 100</e>
+            </effect>
+            <possible_scenario_id>
+                <choice>
+                    <id>arriver_a_la_banque</id>
+                    <text>Retour à l'accueil</text>
+                </choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>deposer_argent</_id>
+        <description>Vous déposez une somme d'argent sur votre compte.</description>
+        <action>
+            <effect>
+                <e>money - 100</e>
+            </effect>
+            <possible_scenario_id>
+                <choice>
+                    <id>arriver_a_la_banque</id>
+                    <text>Retour à l'accueil</text>
+                </choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>ouvrir_compte_epargne</_id>
+        <description>Vous demandez à ouvrir un compte épargne pour placer votre argent.</description>
+        <action>
+            <effect>
+                <e>aura + 10%</e>
+                <e>money - 50</e>
+            </effect>
+            <possible_scenario_id>
+                <choice>
+                    <id>arriver_a_la_banque</id>
+                    <text>Retour à l'accueil</text>
+                </choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>parler_conseiller</_id>
+        <description>Vous parlez avec un conseiller bancaire qui vous propose différents produits financiers.</description>
+        <action>
+            <possible_scenario_id>
+                <choice>
+                    <id>ouvrir_compte_epargne</id>
+                    <text>Accepter d'ouvrir un compte épargne</text>
+                </choice>
+                <choice>
+                    <id>quitter_banque</id>
+                    <text>Refuser poliment et quitter</text>
+                </choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>quitter_banque</_id>
+        <description>Vous quittez la banque, prêt à continuer votre journée.</description>
+        <action>
+            <possible_scenario_id />
+        </action>
+    </scenario>
+</scenarios>

@@ -1,0 +1,272 @@
+<scenarios>
+    <scenario>
+        <_id>explorer_le_quartier</_id>
+        <description>Vous vous aventurez dans le quartier sombre, où l'odeur de l'alcool et de la drogue flotte dans l'air.</description>
+        <action>
+            <possible_scenario_id>
+                <choice><id>affronter_un_dealer</id><text>Faire face à un dealer</text></choice>
+                <choice><id>entrer_dans_un_club</id><text>Entrer dans un club</text></choice>
+                <choice><id>voler_un_passant</id><text>Voler un passant</text></choice>
+                <choice><id>être_approché_par_un_proxénète</id><text>Parler à un homme louche</text></choice>
+                <choice><id>se_faire_agresser</id><text>Risque de se faire agresser</text></choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>affronter_un_dealer</_id>
+        <description>Un dealer vous propose un sachet suspect. Acceptez-vous ?</description>
+        <action>
+            <possible_scenario_id>
+                <choice><id>acheter_drogue</id><text>Accepter et acheter</text></choice>
+                <choice><id>refuser_drogue</id><text>Refuser poliment</text></choice>
+                <choice><id>se_faire_tabasser</id><text>Réagir violemment</text></choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>acheter_drogue</_id>
+        <description>Vous achetez un sachet et le glissez discrètement dans votre poche.</description>
+        <action>
+            <effect>
+                <e>money - 50</e>
+                <e>stress - 10%</e>
+                <e>sante - 20</e>
+            </effect>
+            <possible_scenario_id>
+                <choice><id>explorer_le_quartier</id><text>Continuer à explorer</text></choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>refuser_drogue</_id>
+        <description>Le dealer vous regarde mal et murmure quelque chose en vous fixant.</description>
+        <action>
+            <possible_scenario_id>
+                <choice><id>se_faire_tabasser</id><text>Ignorer et s’éloigner</text></choice>
+                <choice><id>partir_vite</id><text>Partir rapidement</text></choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>se_faire_tabasser</_id>
+        <description>Le dealer et ses potes vous frappent violemment.</description>
+        <action>
+            <effect>
+                <e>sante - 40</e>
+                <e>money - 20</e>
+            </effect>
+            <possible_scenario_id>
+                <choice><id>explorer_le_quartier</id><text>Retourner dans le quartier</text></choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>entrer_dans_un_club</_id>
+        <description>Vous entrez dans un club sombre, la musique est assourdissante.</description>
+        <action>
+            <possible_scenario_id>
+                <choice><id>boire_un_coup</id><text>Prendre un verre</text></choice>
+                <choice><id>se_battre_avec_un_ivrogne</id><text>Se disputer avec un ivrogne</text></choice>
+                <choice><id>suivre_une_femme</id><text>Suivre une femme mystérieuse</text></choice>
+                <choice><id>sortir_du_club</id><text>Quitter le club</text></choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>boire_un_coup</_id>
+        <description>Vous prenez un verre et vous sentez un peu plus détendu.</description>
+        <action>
+            <effect>
+                <e>money - 15</e>
+                <e>stress - 10%</e>
+                <e>sante - 5</e>
+            </effect>
+            <possible_scenario_id>
+                <choice><id>entrer_dans_un_club</id><text>Rester au club</text></choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>se_battre_avec_un_ivrogne</_id>
+        <description>Un homme saoul vous insulte. Que faites-vous ?</description>
+        <action>
+            <possible_scenario_id>
+                <choice><id>lui_rendre_coups</id><text>Riposter</text></choice>
+                <choice><id>le_calmer</id><text>Essayer de le calmer</text></choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>lui_rendre_coups</_id>
+        <description>Vous lui donnez un coup de poing, et la bagarre éclate.</description>
+        <action>
+            <effect>
+                <e>sante - 20</e>
+                <e>humeur + 5</e>
+            </effect>
+            <possible_scenario_id>
+                <choice><id>etre_vire_du_club</id><text>Expulsé du club</text></choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>etre_vire_du_club</_id>
+        <description>Les videurs vous mettent dehors.</description>
+        <action>
+            <possible_scenario_id>
+                <choice><id>explorer_le_quartier</id><text>Retourner dans la rue</text></choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>suivre_une_femme</_id>
+        <description>Une femme vous fait signe de la suivre dans une ruelle sombre...</description>
+        <action>
+            <possible_scenario_id>
+                <choice><id>etre_piege</id><text>Suivre sans hésiter</text></choice>
+                <choice><id>passer_du_bon_temps</id><text>Passer un bon moment</text></choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>etre_piege</_id>
+        <description>Vous êtes attaqué par des hommes cachés dans l’ombre.</description>
+        <action>
+            <effect>
+                <e>money - 100</e>
+                <e>sante - 50</e>
+            </effect>
+            <possible_scenario_id>
+                <choice><id>explorer_le_quartier</id><text>Reprendre la route</text></choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>passer_du_bon_temps</_id>
+        <description>Vous passez un moment agréable, mais cela vous coûte cher...</description>
+        <action>
+            <effect>
+                <e>money - 200</e>
+                <e>humeur + 20%</e>
+                <e>sante - 10</e>
+            </effect>
+            <possible_scenario_id>
+                <choice><id>explorer_le_quartier</id><text>Retourner dans le quartier</text></choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>voler_un_passant</_id>
+        <description>Vous apercevez une victime potentielle. Que faites-vous ?</description>
+        <action>
+            <possible_scenario_id>
+                <choice><id>reussir_vol</id><text>Tenter de voler</text></choice>
+                <choice><id>se_faire_arreter</id><text>Se faire repérer</text></choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>reussir_vol</_id>
+        <description>Vous volez un passant et partez rapidement.</description>
+        <action>
+            <effect>
+                <e>money + 100</e>
+                <e>stress + 10%</e>
+            </effect>
+            <possible_scenario_id>
+                <choice><id>explorer_le_quartier</id><text>Continuer à explorer</text></choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>se_faire_arreter</_id>
+        <description>Un policier vous attrape en flagrant délit.</description>
+        <action>
+            <effect>
+                <e>money - 200</e>
+                <e>sante - 20</e>
+            </effect>
+            <possible_scenario_id>
+                <choice><id>explorer_le_quartier</id><text>Retour dans la rue</text></choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>être_approché_par_un_proxénète</_id>
+        <description>Un homme louche vous propose un "business".</description>
+        <action>
+            <possible_scenario_id>
+                <choice><id>refuser_offre</id><text>Refuser l’offre</text></choice>
+                <choice><id>accepter_offre</id><text>Accepter le deal</text></choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>accepter_offre</_id>
+        <description>Vous gagnez de l’argent, mais votre morale en prend un coup.</description>
+        <action>
+            <effect>
+                <e>money + 500</e>
+                <e>stress + 30%</e>
+            </effect>
+            <possible_scenario_id>
+                <choice><id>explorer_le_quartier</id><text>Retourner dans le quartier</text></choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>se_faire_agresser</_id>
+        <description>Vous êtes accosté par un groupe de jeunes. Que faites-vous ?</description>
+        <action>
+            <possible_scenario_id>
+                <choice><id>se_battre</id><text>Se battre</text></choice>
+                <choice><id>fuir</id><text>Fuir</text></choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>se_battre</_id>
+        <description>Vous vous battez, mais ils sont trop nombreux.</description>
+        <action>
+            <effect>
+                <e>sante - 30</e>
+                <e>money - 50</e>
+            </effect>
+            <possible_scenario_id>
+                <choice><id>explorer_le_quartier</id><text>Retourner dans le quartier</text></choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>fuir</_id>
+        <description>Vous parvenez à vous échapper, mais vous êtes secoué.</description>
+        <action>
+            <effect>
+                <e>stress + 20%</e>
+            </effect>
+            <possible_scenario_id>
+                <choice><id>explorer_le_quartier</id><text>Retourner dans le quartier</text></choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+</scenarios>
