@@ -1,12 +1,6 @@
-#![allow(dead_code)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ItemType {
-    Food,
-    Weapon,
-    Drug,
-    Money,
-    Other,
-}
+
+pub use crate::utils::types_enums::ItemType;
+
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Effect {

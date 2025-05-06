@@ -9,7 +9,7 @@ mod utils;
 pub mod scenario;
 
 
-use crate::game_engine::moteur_de_jeu::{MoteurDeJeu, MenuPrincipal};
+use crate::game_engine::moteur_de_jeu::MoteurDeJeu;
 use crate::characters::joueur::Joueur;
 use crate::world::monde::Monde;
 use crate::world::gestionnaire_de_temps::GestionnaireDeTemps;
@@ -20,8 +20,29 @@ use crate::utils::types_enums::{
     PlaceType, PathType, Sex, EventType, CharacterState
 };
 use crate::events::evenement::{Evenement, EventData};
+use rpg_textuel::{prompt, prompt_string};
+
 
 fn main() {
+    let name = prompt_string("Entrez le nom de votre personnage [Jean] : ", "Jean");
+    let age: u32 = prompt("Entrez l'âge de votre personnage [18] : ", 18);
+    
+    // Sélection du sexe
+    println!("Choisissez votre sexe :");
+    println!("1) Homme");
+    println!("2) Femme");
+    println!("3) Autre");
+    let sexe_choice: u32 = prompt("Votre choix [1] : ", 1);
+    let sex = match sexe_choice {
+        1 => Sex::Male,
+        2 => Sex::Female,
+        3 => Sex::Other,
+        _ => Sex::Male, // Par défaut Homme
+    };
+    
+    let health: i32 = 75;
+    let money: i32 = 150;
+
     let lieu0 = Lieu::new(
         0,
         "Home",
@@ -117,21 +138,21 @@ fn main() {
     let player_progression = Progression::new(PathType::Legal, 0, 10);
 
     let player = Joueur {
-        name: "Jean".to_string(),
-        sex: Sex::Male,
-        age: 18,
-        health: 100,
-        hunger: 0,
-        power: 5,
-        aura: 2,
-        money: 50,
+        name,
+        sex,
+        age,
+        health,
+        hunger: 50,
+        power: 50,
+        aura: 10,
+        money,
         state: CharacterState::Normal,
         inventory: player_inventory,
         current_place: 0,
-        experience: 0,
+        experience: 1,
         level: 1,
         current_progress: player_progression,
-        bank_balance: 0,
+        bank_balance: 100,
     };
 
     let mut moteur = MoteurDeJeu::new(world, player);

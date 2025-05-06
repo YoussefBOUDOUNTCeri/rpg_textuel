@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 use crate::characters::personnage::{Personnage, Objet};
+use crate::utils::types_enums::ItemType;
 use crate::items::inventaire::Inventaire;
 use crate::progression::progression::Progression;
 use crate::utils::types_enums::{Sex, CharacterState, PathType};
@@ -90,7 +91,7 @@ impl Personnage for Joueur {
                 crate::characters::personnage::Effect::Debuff => {}
             }
         }
-        if item.item_type == crate::characters::personnage::ItemType::Food {
+        if item.item_type == ItemType::Food {
             if self.hunger > 0 {
                 self.hunger -= 10;
                 if self.hunger < 0 {

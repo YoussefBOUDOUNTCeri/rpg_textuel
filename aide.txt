@@ -1,0 +1,2347 @@
+
+Voila la architecture de mon porjet : 
+uapv2001561@e-mc131-06:~/Desktop/DEPOTS/S2/rpg_textuel$ tree
+.
+├── Cargo.lock
+├── Cargo.toml
+├── README.md
+├── scenarios
+│   ├── bank.xml
+│   ├── city.xml
+│   ├── gym.xml
+│   ├── home.xml
+│   ├── hospital.xml
+│   ├── neighborhood.xml
+│   ├── plage.xml
+│   ├── prison.xml
+│   └── supermarche.xml
+├── src
+│   ├── characters
+│   │   ├── joueur.rs
+│   │   ├── mod.rs
+│   │   ├── personnage.rs
+│   │   └── pnj.rs
+│   ├── dialogue
+│   │   ├── dialogue.rs
+│   │   └── mod.rs
+│   ├── events
+│   │   ├── evenement.rs
+│   │   └── mod.rs
+│   ├── game_engine
+│   │   ├── mod.rs
+│   │   └── moteur_de_jeu.rs
+│   ├── items
+│   │   ├── inventaire.rs
+│   │   ├── mod.rs
+│   │   └── objet.rs
+│   ├── main.rs
+│   ├── progression
+│   │   ├── mod.rs
+│   │   └── progression.rs
+│   ├── scenario
+│   │   ├── mod.rs
+│   │   └── scenarios.rs
+│   ├── utils
+│   │   ├── mod.rs
+│   │   └── types_enums.rs
+│   └── world
+│       ├── gestionnaire_de_temps.rs
+│       ├── lieu.rs
+│       ├── mod.rs
+│       └── monde.rs
+├── target
+
+Voila les fichiers : 
+
+-------------------------
+src/characters/mod.rs
+-------------------------
+    pub mod personnage;
+    pub mod joueur;
+    pub mod pnj;
+
+-------------------------
+src/characters/joueur.rs
+-------------------------
+    #![allow(dead_code)]
+    use crate::characters::personnage::{Personnage, Objet};
+    use crate::utils::types_enums::ItemType;
+    use crate::items::inventaire::Inventaire;
+    use crate::progression::progression::Progression;
+    use crate::utils::types_enums::{Sex, CharacterState, PathType};
+
+    pub struct Joueur {
+        pub name: String,
+        pub sex: Sex,
+        pub age: u32,
+        pub health: i32,
+        pub hunger: i32,
+        pub power: i32,
+        pub aura: i32,
+        pub money: i32,
+        pub state: CharacterState,
+        pub inventory: Inventaire,
+        pub current_place: usize,
+        pub experience: i32,
+        pub level: i32,
+        pub current_progress: Progression,
+        pub bank_balance: i32,
+    }
+
+    impl Joueur {
+        pub fn add_experience(&mut self, amount: i32) {
+            self.experience += amount;
+            if self.experience >= 100 {
+                self.experience = 0;
+                self.level += 1;
+            }
+        }
+
+        pub fn choose_path(&mut self, path: PathType) {
+            self.current_progress.path_type = path;
+        }
+
+        pub fn deposit_money(&mut self, amount: i32) {
+            if amount > 0 && self.money >= amount {
+                self.money -= amount;
+                self.bank_balance += amount;
+            }
+        }
+
+        pub fn withdraw_money(&mut self, amount: i32) {
+            if amount > 0 && self.bank_balance >= amount {
+                self.bank_balance -= amount;
+                self.money += amount;
+            }
+        }
+    }
+
+    impl Personnage for Joueur {
+        fn get_name(&self) -> &str {
+            &self.name
+        }
+
+        fn get_health(&self) -> i32 {
+            self.health
+        }
+
+        fn get_hunger(&self) -> i32 {
+            self.hunger
+        }
+
+        fn get_money(&self) -> i32 {
+            self.money
+        }
+
+        fn move_to(&mut self, place_id: usize) {
+            self.current_place = place_id;
+        }
+
+        fn eat(&mut self, item: &Objet) {
+            if let Some(effect) = &item.effects {
+                match effect {
+                    crate::characters::personnage::Effect::Heal(v) => {
+                        self.health += v;
+                        if self.health > 100 {
+                            self.health = 100;
+                        }
+                    }
+                    crate::characters::personnage::Effect::Damage(v) => {
+                        self.health -= v;
+                        if self.health < 0 {
+                            self.health = 0;
+                        }
+                    }
+                    crate::characters::personnage::Effect::Buff => {}
+                    crate::characters::personnage::Effect::Debuff => {}
+                }
+            }
+            if item.item_type == ItemType::Food {
+                if self.hunger > 0 {
+                    self.hunger -= 10;
+                    if self.hunger < 0 {
+                        self.hunger = 0;
+                    }
+                }
+            }
+        }
+
+        fn fight(&mut self, target: &mut dyn Personnage) {
+            if self.power > 0 {
+                target.receive_damage(self.power);
+            }
+        }
+
+        fn talk(&self, _target: &dyn Personnage) {
+        }
+
+        fn work(&mut self) {
+            self.money += 10;
+        }
+
+        fn set_health(&mut self, value: i32) {
+            self.health = value;
+        }
+
+        fn set_hunger(&mut self, value: i32) {
+            self.hunger = value;
+        }
+
+        fn receive_damage(&mut self, amount: i32) {
+            self.health -= amount;
+            if self.health < 0 {
+                self.health = 0;
+            }
+        }
+}
+
+-------------------------
+src/characters/personnage.rs
+-------------------------
+    use crate::utils::types_enums::ItemType;
+
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub enum Effect {
+        Heal(i32),
+        Damage(i32),
+        Buff,
+        Debuff,
+    }
+
+    pub struct Objet {
+        pub id: usize,
+        pub name: String,
+        pub description: String,
+        pub item_type: ItemType,
+        pub value: i32,
+        pub effects: Option<Effect>,
+    }
+
+    pub trait Personnage {
+        fn get_name(&self) -> &str;
+        fn get_health(&self) -> i32;
+        fn get_hunger(&self) -> i32;
+        fn get_money(&self) -> i32;
+        fn move_to(&mut self, place_id: usize);
+        fn eat(&mut self, item: &Objet);
+        fn fight(&mut self, target: &mut dyn Personnage);
+        fn talk(&self, target: &dyn Personnage);
+        fn work(&mut self);
+
+        fn set_health(&mut self, value: i32);
+        fn set_hunger(&mut self, value: i32);
+
+        fn receive_damage(&mut self, amount: i32);
+}
+-------------------------
+src/characters/pnj.rs
+-------------------------
+    #![allow(dead_code)]
+    use crate::characters::personnage::{Personnage, Objet};
+    use crate::items::inventaire::Inventaire;
+    use crate::utils::types_enums::{Sex, CharacterState, NPCType, NPCState};
+    use crate::characters::joueur::Joueur;
+    use crate::utils::types_enums::ItemType;
+
+    pub struct PNJ {
+        pub name: String,
+        pub sex: Sex,
+        pub age: u32,
+        pub health: i32,
+        pub hunger: i32,
+        pub power: i32,
+        pub aura: i32,
+        pub money: i32,
+        pub state: CharacterState,
+        pub inventory: Inventaire,
+        pub current_place: usize,
+        pub npc_type: NPCType,
+        pub ai_state: NPCState,
+    }
+
+    impl PNJ {
+        pub fn do_ai(&mut self) {
+            match self.ai_state {
+                NPCState::Idle => {}
+                NPCState::Patrol => {}
+                NPCState::Attack => {}
+                NPCState::Flee => {}
+                NPCState::Follow => {}
+            }
+        }
+
+        pub fn interact_with_player(&mut self, _player: &mut Joueur) {
+        }
+    }
+
+    impl Personnage for PNJ {
+        fn get_name(&self) -> &str {
+            &self.name
+        }
+
+        fn get_health(&self) -> i32 {
+            self.health
+        }
+
+        fn get_hunger(&self) -> i32 {
+            self.hunger
+        }
+
+        fn get_money(&self) -> i32 {
+            self.money
+        }
+
+        fn move_to(&mut self, place_id: usize) {
+            self.current_place = place_id;
+        }
+
+        fn eat(&mut self, item: &Objet) {
+            if let Some(effect) = &item.effects {
+                match effect {
+                    crate::characters::personnage::Effect::Heal(v) => {
+                        self.health += v;
+                        if self.health > 100 {
+                            self.health = 100;
+                        }
+                    }
+                    crate::characters::personnage::Effect::Damage(v) => {
+                        self.health -= v;
+                        if self.health < 0 {
+                            self.health = 0;
+                        }
+                    }
+                    crate::characters::personnage::Effect::Buff => {}
+                    crate::characters::personnage::Effect::Debuff => {}
+                }
+            }
+            if item.item_type == ItemType::Food {
+                if self.hunger > 0 {
+                    self.hunger -= 5;
+                    if self.hunger < 0 {
+                        self.hunger = 0;
+                    }
+                }
+            }
+        }
+
+        fn fight(&mut self, target: &mut dyn Personnage) {
+            if self.power > 0 {
+                target.receive_damage(self.power);
+            }
+        }
+
+        fn talk(&self, _target: &dyn Personnage) {
+        }
+
+        fn work(&mut self) {
+            self.money += 5;
+        }
+
+        fn set_health(&mut self, value: i32) {
+            self.health = value;
+        }
+
+        fn set_hunger(&mut self, value: i32) {
+            self.hunger = value;
+        }
+
+        fn receive_damage(&mut self, amount: i32) {
+            self.health -= amount;
+            if self.health < 0 {
+                self.health = 0;
+            }
+        }
+}
+-------------------------
+src/dialogue/mod.rs
+-------------------------
+    pub mod dialogue;
+
+-------------------------
+src/dialogue/dialogue.rs
+-------------------------
+    #![allow(dead_code)]
+    pub struct DialogueChoice {
+        pub text: String,
+        pub next_line: usize,
+    }
+
+    pub struct Dialogue {
+        pub npc_id: usize,
+        pub lines: Vec<String>,
+        pub current_line_index: usize,
+        pub choices: Vec<DialogueChoice>,
+    }
+
+    impl Dialogue {
+        pub fn new(npc_id: usize, lines: Vec<String>, choices: Vec<DialogueChoice>) -> Self {
+            Self {
+                npc_id,
+                lines,
+                current_line_index: 0,
+                choices,
+            }
+        }
+
+        pub fn start_dialogue(&mut self) {
+            self.current_line_index = 0;
+        }
+
+        pub fn next_line(&mut self) {
+            if self.current_line_index < self.lines.len() - 1 {
+                self.current_line_index += 1;
+            }
+        }
+
+        pub fn select_choice(&mut self, choice_index: usize) {
+            if let Some(choice) = self.choices.get(choice_index) {
+                if choice.next_line < self.lines.len() {
+                    self.current_line_index = choice.next_line;
+                }
+            }
+        }
+}
+
+-------------------------
+src/events/mod.rs
+-------------------------
+    pub mod evenement;
+
+-------------------------
+src/events/evenement.rs
+-------------------------
+    use crate::utils::types_enums::EventType;
+    use crate::world::monde::Monde;
+    
+    #[derive(Clone)]
+    pub struct EventData {
+        pub description: String,
+        pub _target_id: Option<usize>,
+    }
+
+    pub struct Evenement {
+        pub _id: usize,
+        pub trigger_time: u32,
+        pub event_type: EventType,
+        pub data: Option<EventData>,
+    }
+
+    impl Evenement {
+        pub fn new(
+            id: usize,
+            trigger_time: u32,
+            event_type: EventType,
+            data: Option<EventData>,
+        ) -> Self {
+            Self {
+                _id: id,
+                trigger_time,
+                event_type,
+                data,
+            }
+        }
+
+        pub fn execute(&self, _monde: &mut Monde) {
+            match self.event_type {
+                EventType::RandomEncounter => {
+                    if let Some(info) = &self.data {
+                        let _desc = &info.description;
+                    }
+                }
+                EventType::PoliceRaid => {
+                    if let Some(info) = &self.data {
+                        let _desc = &info.description;
+                    }
+                }
+                EventType::ScheduledMeeting => {
+                    if let Some(info) = &self.data {
+                        let _desc = &info.description;
+                    }
+                }
+                EventType::Other => {
+                    if let Some(info) = &self.data {
+                        let _desc = &info.description;
+                    }
+                }
+            }
+        }
+}
+
+-------------------------
+src/game_engine/mod.rs
+-------------------------
+    pub mod moteur_de_jeu;
+
+-------------------------
+src/game_engine/moteur_de_jeu.rs
+-------------------------
+    use std::io::{self, Write};
+    use crate::world::monde::Monde;
+    use crate::characters::joueur::Joueur;
+    use crate::characters::personnage::Personnage;
+    use crate::scenario::scenarios::ScenarioManager;
+
+    pub struct MoteurDeJeu {
+        pub world: Monde,
+        pub player: Joueur,
+        pub is_running: bool,
+        pub current_menu: MenuPrincipal,
+        pub current_connected_places: Vec<usize>,
+        pub history: Vec<String>,
+        pub scenario_manager: Option<ScenarioManager>,
+    }
+
+    #[derive(Debug, PartialEq)]
+    pub enum MenuPrincipal {
+        Accueil,
+        SeDeplacer,
+        Inventaire,
+        Statut,
+        Quitter,
+        Scenario,
+    }
+    impl MoteurDeJeu {
+        pub fn new(world: Monde, player: Joueur) -> Self {
+            Self {
+                world,
+                player,
+                is_running: true,
+                current_menu: MenuPrincipal::Accueil,
+                current_connected_places: Vec::new(),
+                history: Vec::new(),
+                scenario_manager: None,
+            }
+        }
+
+        pub fn run(&mut self) {
+            while self.is_running {
+                self.render();
+                let choix = self.lire_entree_utilisateur();
+                self.gerer_entree_principale(choix);
+                self.mettre_a_jour();
+            }
+        }
+
+        fn render(&mut self) {
+            self.afficher_interface_ascii();
+            match self.current_menu {
+                MenuPrincipal::Accueil => self.afficher_menu_accueil(),
+                MenuPrincipal::SeDeplacer => self.afficher_menu_deplacement(),
+                MenuPrincipal::Inventaire => self.afficher_menu_inventaire(),
+                MenuPrincipal::Statut => self.afficher_menu_statut(),
+                MenuPrincipal::Scenario => self.afficher_menu_scenario(),
+                MenuPrincipal::Quitter => {},
+            }
+        }
+
+        fn afficher_interface_ascii(&self) {
+            let jour = self.world.time_manager.get_current_day();
+            let heure = self.world.time_manager.get_current_hour();
+            let minute = self.world.time_manager.get_current_minute();
+            let lieu_actuel = self.world.get_place_name(self.player.current_place);
+            let nom_joueur = self.player.get_name();
+            print!("\x1B[2J\x1B[1;1H");
+            println!("+-----------------------------------------------------------------------------------+");
+            println!("|     O        | Nom : {:5}  | Force : {:3}/100                                     |", nom_joueur, self.player.power);
+            println!("|    /|\\       | Sexe : {:6}           | Aura  : {:3}/100                          |", 
+                    match self.player.sex { crate::utils::types_enums::Sex::Male => "Homme", crate::utils::types_enums::Sex::Female => "Femme", _ => "Autre" },
+                    self.player.aura);
+            println!("|    / \\       | Age : {:3}               | Argent : {:4}$                           |", self.player.age, self.player.money);
+            println!("|              | Santé : {:3}/100         | Exp : {} xp                               |", self.player.health, self.player.experience);
+            println!("|              | Faim  : {:03}/100         | Level : {}                                |", self.player.hunger, self.player.level);
+            println!("+-----------------------------------------------------------------------------------+");
+            println!("| Jour {} - {:02}:{:02}           Zone : « {} »", jour, heure, minute, lieu_actuel);
+            println!("+-----------------------------------------------------------------------------------+");
+            if self.current_menu == MenuPrincipal::Accueil {
+                println!("1) Se déplacer");
+                println!("2) Interagir avec le lieu");
+                println!("3) Inventaire");
+                println!("4) Statut (détails)");
+                println!("5) Quitter");
+                print!("\nEntrez votre choix : ");
+                io::stdout().flush().unwrap();
+            }
+        }
+        
+        fn afficher_menu_accueil(&self) {}
+        
+        fn afficher_menu_deplacement(&mut self) {
+            println!("");
+            println!("MENU DÉPLACEMENT");
+            self.current_connected_places.clear();
+            if let Some(current_place) = self.world.find_place_by_id(self.player.current_place) {
+                println!("Depuis {}, vous pouvez vous rendre ici :", current_place.name);
+                for &place_id in &current_place.connected_places {
+                    if let Some(place) = self.world.find_place_by_id(place_id) {
+                        self.current_connected_places.push(place_id);
+                        let index = self.current_connected_places.len();
+                        println!("{}) {}", index, place.name);
+                    }
+                }
+            }
+            println!("0) Retour");
+            print!("Choix : ");
+            io::stdout().flush().unwrap();
+        }
+
+        fn afficher_menu_inventaire(&self) {
+            println!("");
+            println!("+------------------------- INVENTAIRE -------------------------+");
+            if self.player.inventory.items.is_empty() {
+                println!("|                      (Aucun objet)                          |");
+            } else {
+                for it in &self.player.inventory.items {
+                    println!("| > {} ({}$)                                                    |", it.name, it.value);
+                }
+            }
+            println!("+--------------------------------------------------------------+");
+            println!("0) Retour");
+            print!("\nEntrez votre choix : ");
+            io::stdout().flush().unwrap();
+        }
+
+        fn afficher_menu_statut(&self) {
+            println!("");
+            println!("--- STATUT DU JOUEUR ---");
+            println!("Nom       : {}", self.player.get_name());
+            println!("Santé     : {}/100", self.player.get_health());
+            println!("Faim      : {}/100", self.player.get_hunger());
+            println!("Argent    : {}$", self.player.get_money());
+            println!("Banque    : {}$", self.player.bank_balance);
+            println!("Niveau    : {}", self.player.level);
+            println!("Expérience: {}", self.player.experience);
+            println!("--------------------------------------------------------------");
+            println!("Lieu actuel : {}", self.world.get_place_name(self.player.current_place));
+            println!("--------------------------------------------------------------");
+            println!("0) Retour au menu");
+            print!("Choix : ");
+            io::stdout().flush().unwrap();
+        }
+
+        pub fn get_scenario_file(&self) -> &str {
+            match self.player.current_place {
+                0 => "scenarios/home.xml",
+                1 => "scenarios/city.xml",
+                2 => "scenarios/bank.xml",
+                3 => "scenarios/supermarche.xml",
+                4 => "scenarios/neighborhood.xml",
+                5 => "scenarios/plage.xml",
+                6 => "scenarios/hospital.xml",
+                7 => "scenarios/prison.xml",
+                8 => "scenarios/gym.xml",
+                _ => "scenarios/home.xml",
+            }
+        }
+
+        fn afficher_menu_scenario(&mut self) {
+            let file_path = self.get_scenario_file();
+            if self.scenario_manager.is_none() {
+                self.scenario_manager = Some(ScenarioManager::load_from_file(file_path));
+            }
+            if let Some(manager) = &self.scenario_manager {
+                if let Some(scenario) = manager.get_current_scenario() {
+                    println!("");
+                    println!("INFO : {}", scenario.description);
+                    if scenario.choices.is_empty() {
+                        println!("0) Retour");
+                    } else {
+                        for (i, choice) in scenario.choices.iter().enumerate() {
+                            println!("{}) {}", i + 1, choice.text);
+                        }
+                        println!("0) Retour");
+                    }
+                    print!("\nEntrez votre choix : ");
+                    io::stdout().flush().unwrap();
+                }
+            }
+        }
+        
+        fn gerer_entree_principale(&mut self, input: String) {
+            match self.current_menu {
+                MenuPrincipal::Accueil => self.gerer_menu_accueil(input),
+                MenuPrincipal::SeDeplacer => self.gerer_menu_deplacement(input),
+                MenuPrincipal::Inventaire => self.gerer_menu_inventaire(input),
+                MenuPrincipal::Statut => self.gerer_menu_statut(input),
+                MenuPrincipal::Scenario => self.gerer_menu_scenario(input),
+                MenuPrincipal::Quitter => {},
+            }
+        }
+        
+        fn gerer_menu_accueil(&mut self, input: String) {
+            match input.trim() {
+                "1" => self.current_menu = MenuPrincipal::SeDeplacer,
+                "2" => { self.current_menu = MenuPrincipal::Scenario; self.scenario_manager = None; },
+                "3" => self.current_menu = MenuPrincipal::Inventaire,
+                "4" => self.current_menu = MenuPrincipal::Statut,
+                "5" => { self.current_menu = MenuPrincipal::Quitter; self.stop(); },
+                _ => {}
+            }
+        }
+        
+        pub fn gerer_menu_deplacement(&mut self, input: String) {
+            if let Ok(val) = input.trim().parse::<usize>() {
+                if val == 0 {
+                    self.current_menu = MenuPrincipal::Accueil;
+                } else if val <= self.current_connected_places.len() {
+                    let place_id = self.current_connected_places[val - 1];
+                    self.player.move_to(place_id);
+                    self.history.push(format!("Déplacement vers {}", self.world.get_place_name(place_id)));
+                    self.current_menu = MenuPrincipal::Accueil;
+                }
+            }
+        }
+        
+        fn gerer_menu_inventaire(&mut self, input: String) {
+            match input.trim() {
+                "0" => self.current_menu = MenuPrincipal::Accueil,
+                "1" => { self.history.push("Utilisation d'un objet (non implémenté)".to_string()); self.current_menu = MenuPrincipal::Accueil; },
+                "2" => { self.history.push("Jet d'un objet (non implémenté)".to_string()); self.current_menu = MenuPrincipal::Accueil; },
+                _ => { self.current_menu = MenuPrincipal::Accueil; }
+            }
+        }
+        
+        fn gerer_menu_statut(&mut self, input: String) {
+            if input.trim() == "0" { self.current_menu = MenuPrincipal::Accueil; }
+        }
+        
+        fn gerer_menu_scenario(&mut self, input: String) {
+            if let Some(manager) = &mut self.scenario_manager {
+                if let Some(scenario) = manager.get_current_scenario() {
+                    if scenario.choices.is_empty() || input.trim() == "0" {
+                        self.current_menu = MenuPrincipal::Accueil;
+                        manager.current_id = None;
+                    } else {
+                        let choice_index = input.trim().parse::<usize>().unwrap_or(0);
+                        if choice_index > 0 && choice_index <= scenario.choices.len() {
+                            let selected_choice = &scenario.choices[choice_index - 1];
+                            let next_id = selected_choice.id.clone();
+                            manager.set_current_scenario(next_id);
+                            manager.apply_effects(&mut self.player);
+                            self.history.push("Scénario appliqué".to_string());
+                            if let Some(new_scenario) = manager.get_current_scenario() {
+                                if new_scenario.choices.is_empty() {
+                                    self.current_menu = MenuPrincipal::Accueil;
+                                    manager.current_id = None;
+                                } else {
+                                    self.current_menu = MenuPrincipal::Scenario;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        fn lire_entree_utilisateur(&self) -> String {
+            print!("> ");
+            io::stdout().flush().unwrap();
+            let mut buffer = String::new();
+            match io::stdin().read_line(&mut buffer) {
+                Ok(_) => buffer.trim().to_string(),
+                Err(_) => String::new(),
+            }
+        }
+        
+        pub fn mettre_a_jour(&mut self) {
+            self.world.update();
+            if self.player.get_health() <= 0 {
+                println!("Vous êtes mort. Fin de la partie.");
+                self.stop();
+            }
+        }
+        
+        pub fn stop(&mut self) {
+            self.is_running = false;
+        }
+}
+
+-------------------------
+src/items/mod.rs
+-------------------------
+    pub mod inventaire;
+    pub mod objet;
+
+-------------------------
+src/items/inventaire.rs
+-------------------------
+    #![allow(dead_code)]
+    use crate::items::objet::Objet;
+
+    pub struct Inventaire {
+        pub items: Vec<Objet>,
+    }
+
+    impl Inventaire {
+        pub fn new() -> Self {
+            Self { items: Vec::new() }
+        }
+
+        pub fn add_item(&mut self, item: Objet) {
+            self.items.push(item);
+        }
+
+        pub fn remove_item(&mut self, item_id: usize) -> Option<Objet> {
+            let index = self.items.iter().position(|x| x.id == item_id)?;
+            Some(self.items.remove(index))
+        }
+
+        pub fn contains_item(&self, item_id: usize) -> bool {
+            self.items.iter().any(|x| x.id == item_id)
+        }
+}
+
+-------------------------
+src/items/objet.rs
+-------------------------
+    #![allow(dead_code)]
+    use crate::utils::types_enums::ItemType;
+    use crate::characters::personnage::{Personnage, Effect};
+
+    #[derive(Clone)]
+    pub struct Objet {
+        pub id: usize,
+        pub name: String,
+        pub description: String,
+        pub item_type: ItemType,
+        pub value: i32,
+        pub effects: Option<Effect>,
+    }
+
+    impl Objet {
+        pub fn use_item(&self, target: &mut dyn Personnage) {
+            if let Some(effect) = &self.effects {
+                match effect {
+                    Effect::Heal(v) => {
+                        let result = target.get_health() + v;
+                        if result > 100 {
+                            target.set_health(100);
+                        } else {
+                            target.set_health(result);
+                        }
+                    }
+                    Effect::Damage(v) => {
+                        target.receive_damage(*v);
+                    }
+                    Effect::Buff => {}
+                    Effect::Debuff => {}
+                }
+            }
+            if self.item_type == ItemType::Food {
+                let hunger = target.get_hunger();
+                let updated = if hunger < 10 { 0 } else { hunger - 10 };
+                target.set_hunger(updated);
+            }
+        }
+}
+
+-------------------------
+src/progression/mod.rs
+-------------------------
+    pub mod progression;
+
+-------------------------
+src/progression/progression.rs
+-------------------------
+    #![allow(dead_code)]
+    use crate::utils::types_enums::PathType;
+
+    pub struct Progression {
+        pub path_type: PathType,
+        pub current_rank: i32,
+        pub max_rank: i32,
+    }
+
+    impl Progression {
+        pub fn new(path_type: PathType, current_rank: i32, max_rank: i32) -> Self {
+            Self {
+                path_type,
+                current_rank,
+                max_rank,
+            }
+        }
+
+        pub fn advance(&mut self, amount: i32) {
+            self.current_rank += amount;
+            if self.current_rank > self.max_rank {
+                self.current_rank = self.max_rank;
+            }
+        }
+
+        pub fn regress(&mut self, amount: i32) {
+            self.current_rank -= amount;
+            if self.current_rank < 0 {
+                self.current_rank = 0;
+            }
+        }
+}
+
+-------------------------
+src/scenario/mod.rs
+-------------------------
+    pub mod scenarios;
+
+-------------------------
+src/scenario/scenarios.rs
+-------------------------
+    use std::fs::File;
+    use std::io::BufReader;
+    use quick_xml::Reader;
+    use quick_xml::events::Event;
+    use crate::characters::joueur::Joueur;
+
+    #[derive(Clone)]
+    pub struct Choice {
+        pub id: String,
+        pub text: String,
+    }
+
+    #[derive(Clone)]
+    pub struct Scenario {
+        pub id: String,
+        pub description: String,
+        pub effects: Vec<String>,
+        pub choices: Vec<Choice>,
+    }
+
+    pub struct ScenarioManager {
+        pub scenarios: Vec<Scenario>,
+        pub current_id: Option<String>,
+    }
+
+    impl ScenarioManager {
+        pub fn load_from_file(path: &str) -> Self {
+            let file = File::open(path).unwrap();
+            let file = BufReader::new(file);
+            let mut reader = Reader::from_reader(file);
+            reader.trim_text(true);
+            let mut buf = Vec::new();
+            let mut scenarios = Vec::new();
+            let mut current_scenario = Scenario {
+                id: String::new(),
+                description: String::new(),
+                effects: Vec::new(),
+                choices: Vec::new(),
+            };
+            let mut current_choice: Option<Choice> = None;
+            let mut current_tag: Option<String> = None;
+            let mut in_scenario = false;
+            let mut in_effect = false;
+            // let mut in_possible = false;
+            let mut in_choice = false;
+            loop {
+                match reader.read_event_into(&mut buf) {
+                    Ok(Event::Start(ref e)) => {
+                        current_tag = Some(String::from_utf8_lossy(e.name().as_ref()).to_string());
+                        match current_tag.as_deref() {
+                            Some("scenario") => {
+                                in_scenario = true;
+                                current_scenario = Scenario {
+                                    id: String::new(),
+                                    description: String::new(),
+                                    effects: Vec::new(),
+                                    choices: Vec::new(),
+                                }
+                            }
+                            Some("effect") => {
+                                in_effect = true;
+                            }
+                            Some("possible_scenario_id") => {
+                                // in_possible = true;
+                            }
+                            Some("choice") => {
+                                in_choice = true;
+                                current_choice = Some(Choice {
+                                    id: String::new(),
+                                    text: String::new(),
+                                });
+                            }
+                            _ => {}
+                        }
+                    },
+                    Ok(Event::End(ref e)) => {
+                        let end_tag = String::from_utf8_lossy(e.name().as_ref()).to_string();
+                        match end_tag.as_str() {
+                            "scenario" => {
+                                in_scenario = false;
+                                scenarios.push(current_scenario.clone());
+                            }
+                            "effect" => {
+                                in_effect = false;
+                            }
+                            "possible_scenario_id" => {
+                                // in_possible = false;
+                            }
+                            "choice" => {
+                                in_choice = false;
+                                if let Some(choice) = current_choice.take() {
+                                    current_scenario.choices.push(choice);
+                                }
+                            }
+                            _ => {}
+                        }
+                        current_tag = None;
+                    },
+                    Ok(Event::Text(e)) => {
+                        let text = e.unescape().unwrap().into_owned();
+                        if in_scenario {
+                            match current_tag.as_deref() {
+                                Some("_id") => {
+                                    if current_scenario.id.is_empty() {
+                                        current_scenario.id = text.clone();
+                                    }
+                                }
+                                Some("description") => {
+                                    if current_scenario.description.is_empty() {
+                                        current_scenario.description = text.clone();
+                                    }
+                                }
+                                Some("e") if in_effect => {
+                                    current_scenario.effects.push(text.clone());
+                                }
+                                Some("id") if in_choice => {
+                                    if let Some(ref mut choice) = current_choice {
+                                        choice.id = text.clone();
+                                    }
+                                }
+                                Some("text") if in_choice => {
+                                    if let Some(ref mut choice) = current_choice {
+                                        choice.text = text.clone();
+                                    }
+                                }
+                                _ => {}
+                            }
+                        }
+                    },
+                    Ok(Event::Eof) => break,
+                    Err(e) => {
+                        eprintln!("Error at position {}: {:?}", reader.buffer_position(), e);
+                        break;
+                    },
+                    _ => {}
+                }
+                buf.clear();
+            }
+            ScenarioManager { scenarios, current_id: None }
+        }
+
+        pub fn get_current_scenario(&self) -> Option<&Scenario> {
+            match &self.current_id {
+                Some(id) => self.scenarios.iter().find(|s| s.id == *id),
+                None => self.scenarios.first(),
+            }
+        }
+
+        pub fn set_current_scenario(&mut self, id: String) {
+            self.current_id = Some(id);
+        }
+
+        pub fn apply_effects(&self, joueur: &mut Joueur) {
+            if let Some(scenario) = self.get_current_scenario() {
+                for effect in &scenario.effects {
+                    let parts: Vec<&str> = effect.split_whitespace().collect();
+                    if parts.len() >= 3 {
+                        let attr = parts[0];
+                        let op = parts[1];
+                        let val_str = parts[2].replace("%", "");
+                        if let Ok(val) = val_str.parse::<i32>() {
+                            match attr {
+                                "health" => {
+                                    if op == "+" { joueur.health += val; } else { joueur.health -= val; }
+                                    if joueur.health > 100 { joueur.health = 100; }
+                                    if joueur.health < 0 { joueur.health = 0; }
+                                },
+                                "hunger" => {
+                                    if op == "+" { joueur.hunger += val; } else { joueur.hunger -= val; }
+                                    if joueur.hunger > 100 { joueur.hunger = 100; }
+                                    if joueur.hunger < 0 { joueur.hunger = 0; }
+                                },
+                                "power" => {
+                                    if op == "+" { joueur.power += val; } else { joueur.power -= val; }
+                                    if joueur.power < 0 { joueur.power = 0; }
+                                },
+                                "aura" => {
+                                    if op == "+" { joueur.aura += val; } else { joueur.aura -= val; }
+                                    if joueur.aura < 0 { joueur.aura = 0; }
+                                },
+                                "money" => {
+                                    if op == "+" { joueur.money += val; } else { joueur.money -= val; }
+                                    if joueur.money < 0 { joueur.money = 0; }
+                                },
+                                _ => {}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+}
+-------------------------
+src/utils/mod.rs
+-------------------------
+    pub mod types_enums;
+
+-------------------------
+src/utils/types_enums.rs
+-------------------------
+    #![allow(dead_code)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub enum PlaceType {
+        Safe,
+        Dangerous,
+        Neutral,
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub enum NPCType {
+        Banker,
+        Policeman,
+        Dealer,
+        GangMember,
+        Civilian,
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub enum NPCState {
+        Idle,
+        Patrol,
+        Attack,
+        Flee,
+        Follow,
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub enum CharacterState {
+        Normal,
+        Wounded,
+        InPrison,
+        Dead,
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub enum ItemType {
+        Food,
+        Weapon,
+        Drug,
+        Money,
+        Other,
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub enum ActionType {
+        Walk,
+        Eat,
+        Fight,
+        Talk,
+        Work,
+        Pickup,
+        UseItem,
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub enum EventType {
+        RandomEncounter,
+        PoliceRaid,
+        ScheduledMeeting,
+        Other,
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub enum PathType {
+        Legal,
+        Illegal,
+        Neutral,
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub enum Sex {
+        Male,
+        Female,
+        Other,
+}
+
+-------------------------
+src/world/mod.rs
+-------------------------
+    pub mod monde;
+    pub mod lieu;
+    pub mod gestionnaire_de_temps;
+
+-------------------------
+src/world/gestionnaire_de_temps.rs
+-------------------------
+    #![allow(dead_code)]
+    pub struct GestionnaireDeTemps {
+        pub current_time: u32,
+        pub day_length: u32,
+    }
+
+    impl GestionnaireDeTemps {
+        pub fn new(current_time: u32, day_length: u32) -> Self {
+            Self {
+                current_time,
+                day_length,
+            }
+        }
+
+        pub fn advance_time(&mut self, amount: u32) {
+            self.current_time += amount;
+        }
+
+        pub fn is_daytime(&self) -> bool {
+            let cycle = self.current_time % self.day_length;
+            cycle < (self.day_length / 2)
+        }
+
+        pub fn get_current_day(&self) -> u32 {
+            self.current_time / self.day_length
+        }
+
+        pub fn get_current_hour(&self) -> u32 {
+            let cycle = self.current_time % self.day_length;
+            (cycle * 24) / self.day_length
+        }
+
+        pub fn get_current_minute(&self) -> u32 {
+            let cycle = self.current_time % self.day_length;
+            (cycle * 24 * 60 / self.day_length) % 60
+        }
+}
+    
+-------------------------
+src/world/lieu.rs
+-------------------------
+    #![allow(dead_code)]
+    use crate::utils::types_enums::PlaceType;
+
+    pub struct Lieu {
+        pub id: usize,
+        pub name: String,
+        pub description: String,
+        pub place_type: PlaceType,
+        pub connected_places: Vec<usize>,
+        pub npcs_in_place: Vec<usize>,
+        pub items_in_place: Vec<usize>,
+    }
+
+    impl Lieu {
+        pub fn new(
+            id: usize,
+            name: &str,
+            description: &str,
+            place_type: PlaceType,
+            connected_places: Vec<usize>,
+        ) -> Self {
+            Self {
+                id,
+                name: name.to_string(),
+                description: description.to_string(),
+                place_type,
+                connected_places,
+                npcs_in_place: Vec::new(),
+                items_in_place: Vec::new(),
+            }
+        }
+
+        pub fn add_npc(&mut self, npc_id: usize) {
+            if !self.npcs_in_place.contains(&npc_id) {
+                self.npcs_in_place.push(npc_id);
+            }
+        }
+
+        pub fn remove_npc(&mut self, npc_id: usize) {
+            if let Some(index) = self.npcs_in_place.iter().position(|&id| id == npc_id) {
+                self.npcs_in_place.remove(index);
+            }
+        }
+
+        pub fn add_item(&mut self, item_id: usize) {
+            if !self.items_in_place.contains(&item_id) {
+                self.items_in_place.push(item_id);
+            }
+        }
+
+        pub fn remove_item(&mut self, item_id: usize) {
+            if let Some(index) = self.items_in_place.iter().position(|&id| id == item_id) {
+                self.items_in_place.remove(index);
+            }
+        }
+}
+
+-------------------------
+src/world/monde.rs
+-------------------------
+    #![allow(dead_code)]
+    use crate::world::lieu::Lieu;
+    use crate::world::gestionnaire_de_temps::GestionnaireDeTemps;
+    use crate::characters::pnj::PNJ;
+    use crate::events::evenement::Evenement;
+    use crate::items::objet::Objet;
+
+    pub struct Monde {
+        pub places: Vec<Lieu>,
+        pub npcs: Vec<PNJ>,
+        pub time_manager: GestionnaireDeTemps,
+        pub events: Vec<Evenement>,
+    }
+
+    impl Monde {
+        pub fn new(
+            places: Vec<Lieu>,
+            npcs: Vec<PNJ>,
+            time_manager: GestionnaireDeTemps,
+            events: Vec<Evenement>,
+        ) -> Self {
+            Self {
+                places,
+                npcs,
+                time_manager,
+                events,
+            }
+        }
+
+        pub fn update(&mut self) {
+            self.time_manager.advance_time(1);
+            self.resolve_events();
+            for npc in self.npcs.iter_mut() {
+                npc.do_ai();
+            }
+        }
+
+        pub fn find_place_by_name(&self, name: &str) -> Option<&Lieu> {
+            self.places.iter().find(|p| p.name == name)
+        }
+
+        pub fn find_place_by_id(&self, place_id: usize) -> Option<&Lieu> {
+            self.places.iter().find(|p| p.id == place_id)
+        }
+
+        pub fn find_place_by_id_mut(&mut self, place_id: usize) -> Option<&mut Lieu> {
+            self.places.iter_mut().find(|p| p.id == place_id)
+        }
+
+        pub fn schedule_event(&mut self, event: Evenement) {
+            self.events.push(event);
+        }
+
+        pub fn resolve_events(&mut self) {
+            let current_time = self.time_manager.current_time;
+            let (due, future): (Vec<Evenement>, Vec<Evenement>) =
+                self.events.drain(..).partition(|evt| evt.trigger_time <= current_time);
+            for evt in due.iter() {
+                evt.execute(self);
+            }
+            self.events = future;
+        }
+
+        pub fn get_item_by_id(&self, _item_id: usize) -> Option<Objet> {
+            None
+        }
+
+        pub fn get_place_name(&self, place_id: usize) -> String {
+            if let Some(place) = self.find_place_by_id(place_id) {
+                place.name.clone()
+            } else {
+                "Lieu inconnu".to_string()
+            }
+        }
+}
+
+-------------------------
+src/main.rs
+-------------------------
+    mod game_engine;
+    mod world;
+    mod characters;
+    mod items;
+    mod events;
+    mod progression;
+    mod dialogue;
+    mod utils;
+    pub mod scenario;
+
+
+    use crate::game_engine::moteur_de_jeu::MoteurDeJeu;
+    use std::io::{self, Write};
+    use crate::characters::joueur::Joueur;
+    use crate::world::monde::Monde;
+    use crate::world::gestionnaire_de_temps::GestionnaireDeTemps;
+    use crate::world::lieu::Lieu;
+    use crate::items::inventaire::Inventaire;
+    use crate::progression::progression::Progression;
+    use crate::utils::types_enums::{
+        PlaceType, PathType, Sex, EventType, CharacterState
+    };
+    use crate::events::evenement::{Evenement, EventData};
+
+    fn prompt<T: std::str::FromStr>(msg: &str, default: T) -> T {
+        print!("{}", msg);
+        io::stdout().flush().unwrap();
+        let mut input = String::new();
+        if io::stdin().read_line(&mut input).is_ok() {
+            if let Ok(val) = input.trim().parse::<T>() {
+                return val;
+            }
+        }
+        default
+    }
+
+    fn prompt_string(msg: &str, default: &str) -> String {
+        print!("{}", msg);
+        io::stdout().flush().unwrap();
+        let mut input = String::new();
+        if io::stdin().read_line(&mut input).is_ok() {
+            let s = input.trim();
+            if !s.is_empty() {
+                return s.to_string();
+            }
+        }
+        default.to_string()
+    }
+
+    fn main() {
+        let name = prompt_string("Entrez le nom de votre personnage [Jean] : ", "Jean");
+        let age: u32 = prompt("Entrez l'âge de votre personnage [18] : ", 18);
+        
+        // Sélection du sexe
+        println!("Choisissez votre sexe :");
+        println!("1) Homme");
+        println!("2) Femme");
+        println!("3) Autre");
+        let sexe_choice: u32 = prompt("Votre choix [1] : ", 1);
+        let sex = match sexe_choice {
+            1 => Sex::Male,
+            2 => Sex::Female,
+            3 => Sex::Other,
+            _ => Sex::Male, // Par défaut Homme
+        };
+        
+        let health: i32 = 75;
+        let money: i32 = 150;
+
+        let lieu0 = Lieu::new(
+            0,
+            "Home",
+            "Une zone calme avec des pavillons.",
+            PlaceType::Safe,
+            vec![1, 4, 5, 7],
+        );
+        let lieu1 = Lieu::new(
+            1,
+            "Centre-Ville",
+            "Un grand centre urbain, très animé.",
+            PlaceType::Neutral,
+            vec![0, 2, 3, 6, 8],
+        );
+        let lieu2 = Lieu::new(
+            2,
+            "Banque",
+            "Un établissement financier sécurisé.",
+            PlaceType::Safe,
+            vec![1],
+        );
+        let lieu3 = Lieu::new(
+            3,
+            "Supermarché",
+            "Un grand magasin pour faire des courses.",
+            PlaceType::Neutral,
+            vec![1],
+        );
+        let lieu4 = Lieu::new(
+            4,
+            "Banlieue mal famée",
+            "Un endroit dangereux où rôdent des gangs.",
+            PlaceType::Dangerous,
+            vec![0],
+        );
+        let lieu5 = Lieu::new(
+            5,
+            "Plage",
+            "Nager.",
+            PlaceType::Neutral,
+            vec![1],
+        );
+        let lieu6 = Lieu::new(
+            6,
+            "Hopital",
+            "Un endroit pour se soigner.",
+            PlaceType::Safe,
+            vec![1],
+        );
+        let lieu7 = Lieu::new(
+            7,
+            "Prison",
+            "La prison c'est dur, la sortie c'est sur",
+            PlaceType::Dangerous,
+            vec![0],
+        );
+        let lieu8 = Lieu::new(
+            8,
+            "Basic Fit",
+            "La prison c'est dur, la sortie c'est sur",
+            PlaceType::Neutral,
+            vec![1],
+        );
+        let places = vec![lieu0, lieu1, lieu2, lieu3, lieu4, lieu5, lieu6, lieu7, lieu8];
+
+        let time_manager = GestionnaireDeTemps::new(0, 1440);
+
+        let events = vec![
+            Evenement::new(
+                0,
+                10,
+                EventType::RandomEncounter,
+                Some(EventData {
+                    description: "Une rencontre aléatoire survient.".to_string(),
+                    _target_id: None,
+                }),
+            ),
+            Evenement::new(
+                1,
+                20,
+                EventType::PoliceRaid,
+                Some(EventData {
+                    description: "La police débarque pour un raid surprise.".to_string(),
+                    _target_id: None,
+                }),
+            ),
+        ];
+        let pnj_list = vec![];
+
+        let world = Monde::new(places, pnj_list, time_manager, events);
+
+        let player_inventory = Inventaire::new();
+        let player_progression = Progression::new(PathType::Legal, 0, 10);
+
+        let player = Joueur {
+            name,
+            sex,
+            age,
+            health,
+            hunger: 50,
+            power: 50,
+            aura: 10,
+            money,
+            state: CharacterState::Normal,
+            inventory: player_inventory,
+            current_place: 0,
+            experience: 1,
+            level: 1,
+            current_progress: player_progression,
+            bank_balance: 100,
+        };
+
+        let mut moteur = MoteurDeJeu::new(world, player);
+        moteur.run();
+}
+
+
+
+Voila a quoi resemmble un scenario :
+
+-------------------------
+scenarios/city.xml
+-------------------------
+<scenarios>
+    <scenario>
+        <_id>arriver_au_centre_ville</_id>
+        <description>Vous arrivez au centre-ville, un lieu animé où les gens vont et viennent. Plusieurs commerces s'offrent à vous.</description>
+        <action>
+            <possible_scenario_id>
+                <choice>
+                    <id>aller_boulangerie</id>
+                    <text>Aller à la boulangerie</text>
+                </choice>
+                <choice>
+                    <id>entrer_superette</id>
+                    <text>Entrer dans la supérette</text>
+                </choice>
+                <choice>
+                    <id>visiter_boutique_vetements</id>
+                    <text>Visiter une boutique de vêtements</text>
+                </choice>
+                <choice>
+                    <id>repartir_du_centre_ville</id>
+                    <text>Quitter le centre-ville</text>
+                </choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <!-- Exemple de sous-scenarios (non détaillés ici mais indispensables) -->
+    <scenario>
+        <_id>aller_boulangerie</_id>
+        <description>Vous entrez dans une boulangerie où l’odeur du pain chaud embaume l’air.</description>
+        <action>
+            <possible_scenario_id>
+                <choice>
+                    <id>acheter_croissant</id>
+                    <text>Acheter un croissant</text>
+                </choice>
+                <choice>
+                    <id>ne_rien_acheter</id>
+                    <text>Ressortir sans rien acheter</text>
+                </choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>entrer_superette</_id>
+        <description>Vous entrez dans une petite supérette de quartier.</description>
+        <action>
+            <possible_scenario_id>
+                <choice>
+                    <id>acheter_bouteille_eau</id>
+                    <text>Acheter une bouteille d’eau</text>
+                </choice>
+                <choice>
+                    <id>ne_rien_acheter</id>
+                    <text>Ressortir les mains vides</text>
+                </choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>visiter_boutique_vetements</_id>
+        <description>Vous entrez dans une boutique de vêtements avec des habits dernier cri.</description>
+        <action>
+            <possible_scenario_id>
+                <choice>
+                    <id>essayer_une_chemise</id>
+                    <text>Essayer une chemise</text>
+                </choice>
+                <choice>
+                    <id>ne_rien_acheter</id>
+                    <text>Regarder sans rien acheter</text>
+                </choice>
+            </possible_scenario_id>
+        </action>
+    </scenario>
+
+    <scenario>
+        <_id>repartir_du_centre_ville</_id>
+        <description>Vous décidez de quitter le centre-ville pour continuer votre aventure ailleurs.</description>
+        <action>
+            <possible_scenario_id />
+        </action>
+    </scenario>
+</scenarios>
+
+////////////////////////////////////////////////////////////////
+Le prof a demande a faire des test uniraires sur chaque classe
+Pour cela j'ia cree un dossier test :
+uapv2001561@e-mc131-06:~/Desktop/DEPOTS/S2/rpg_textuel/tests$ tree
+.
+├── characters_test
+├── events_test.rs
+├── game_engine_test.rs
+├── items_test.rs
+├── scenario_test.rs
+├── utils_test.rs
+└── world_test.rs
+
+-------------------------
+test/characters_test
+-------------------------
+    use rpg_textuel::characters::joueur::Joueur;
+    use rpg_textuel::characters::pnj::PNJ;
+    use rpg_textuel::characters::personnage::{Personnage, Objet, ItemType, Effect};
+    use rpg_textuel::items::inventaire::Inventaire;
+    use rpg_textuel::progression::progression::Progression;
+    use rpg_textuel::utils::types_enums::{Sex, CharacterState, PathType, NPCType, NPCState};
+
+    #[test]
+    fn test_joueur_creation() {
+        let inventaire = Inventaire::new();
+        let progression = Progression::new(PathType::Legal, 0, 10);
+        let joueur = Joueur {
+            name: String::from("Testeur"),
+            sex: Sex::Male,
+            age: 20,
+            health: 100,
+            hunger: 50,
+            power: 20,
+            aura: 15,
+            money: 200,
+            state: CharacterState::Normal,
+            inventory: inventaire,
+            current_place: 0,
+            experience: 0,
+            level: 1,
+            current_progress: progression,
+            bank_balance: 0,
+        };
+
+        assert_eq!(joueur.get_name(), "Testeur");
+        assert_eq!(joueur.get_health(), 100);
+        assert_eq!(joueur.get_money(), 200);
+    }
+
+    #[test]
+    fn test_joueur_experience_et_level_up() {
+        let mut joueur = Joueur {
+            name: String::from("XPMan"),
+            sex: Sex::Male,
+            age: 25,
+            health: 100,
+            hunger: 50,
+            power: 20,
+            aura: 15,
+            money: 100,
+            state: CharacterState::Normal,
+            inventory: Inventaire::new(),
+            current_place: 0,
+            experience: 95,
+            level: 1,
+            current_progress: Progression::new(PathType::Neutral, 0, 10),
+            bank_balance: 0,
+        };
+
+        joueur.add_experience(10);
+        assert_eq!(joueur.experience, 0);
+        assert_eq!(joueur.level, 2);
+    }
+
+    #[test]
+    fn test_joueur_banque_operations() {
+        let mut joueur = Joueur {
+            name: String::from("BankMan"),
+            sex: Sex::Male,
+            age: 30,
+            health: 100,
+            hunger: 50,
+            power: 20,
+            aura: 10,
+            money: 100,
+            state: CharacterState::Normal,
+            inventory: Inventaire::new(),
+            current_place: 0,
+            experience: 0,
+            level: 1,
+            current_progress: Progression::new(PathType::Legal, 0, 10),
+            bank_balance: 0,
+        };
+
+        joueur.deposit_money(50);
+        assert_eq!(joueur.money, 50);
+        assert_eq!(joueur.bank_balance, 50);
+
+        joueur.withdraw_money(30);
+        assert_eq!(joueur.money, 80);
+        assert_eq!(joueur.bank_balance, 20);
+    }
+
+    #[test]
+    fn test_joueur_combat() {
+        let mut joueur = Joueur {
+            name: String::from("Fighter"),
+            sex: Sex::Male,
+            age: 20,
+            health: 100,
+            hunger: 50,
+            power: 20,
+            aura: 10,
+            money: 100,
+            state: CharacterState::Normal,
+            inventory: Inventaire::new(),
+            current_place: 0,
+            experience: 0,
+            level: 1,
+            current_progress: Progression::new(PathType::Neutral, 0, 10),
+            bank_balance: 0,
+        };
+
+        let mut adversaire = Joueur {
+            name: String::from("Victim"),
+            sex: Sex::Female,
+            age: 18,
+            health: 100,
+            hunger: 50,
+            power: 10,
+            aura: 5,
+            money: 50,
+            state: CharacterState::Normal,
+            inventory: Inventaire::new(),
+            current_place: 0,
+            experience: 0,
+            level: 1,
+            current_progress: Progression::new(PathType::Neutral, 0, 10),
+            bank_balance: 0,
+        };
+
+        joueur.fight(&mut adversaire);
+        assert_eq!(adversaire.get_health(), 80);
+    }
+
+    #[test]
+    fn test_pnj_basic_behavior() {
+        let mut pnj = PNJ {
+            name: "Bob le vendeur".to_string(),
+            sex: Sex::Male,
+            age: 40,
+            health: 100,
+            hunger: 30,
+            power: 10,
+            aura: 5,
+            money: 20,
+            state: CharacterState::Normal,
+            inventory: Inventaire::new(),
+            current_place: 0,
+            npc_type: NPCType::Banker,
+            ai_state: NPCState::Idle,
+        };
+
+        assert_eq!(pnj.get_name(), "Bob le vendeur");
+        assert_eq!(pnj.get_health(), 100);
+
+        // Test déplacement
+        pnj.move_to(1);
+        assert_eq!(pnj.current_place, 1);
+}
+
+-------------------------
+test/events_test.rs
+-------------------------
+    use rpg_textuel::events::evenement::{Evenement, EventData};
+    use rpg_textuel::utils::types_enums::EventType;
+    use rpg_textuel::world::gestionnaire_de_temps::GestionnaireDeTemps;
+    use rpg_textuel::world::lieu::Lieu;
+    use rpg_textuel::world::monde::Monde;
+    use rpg_textuel::utils::types_enums::PlaceType;
+
+    #[test]
+    fn test_creation_evenement() {
+        let event_data = EventData {
+            description: String::from("Test Event"),
+            _target_id: Some(1),
+        };
+        
+        let event = Evenement::new(1, 10, EventType::RandomEncounter, Some(event_data.clone()));
+
+        assert_eq!(event._id, 1);
+        assert_eq!(event.trigger_time, 10);
+        assert_eq!(event.event_type, EventType::RandomEncounter);
+        assert!(event.data.is_some());
+        assert_eq!(event.data.unwrap().description, "Test Event");
+    }
+
+    #[test]
+    fn test_execution_evenement_sans_panique() {
+        let event_data = EventData {
+            description: String::from("Test Execution"),
+            _target_id: Some(1),
+        };
+        
+        let event = Evenement::new(2, 5, EventType::PoliceRaid, Some(event_data));
+        
+        // Préparer un monde minimal pour l'exécution
+        let lieu = Lieu::new(0, "Test Place", "Un lieu pour les tests.", PlaceType::Safe, vec![]);
+        let time_manager = GestionnaireDeTemps::new(0, 1440);
+        let mut monde = Monde::new(vec![lieu], vec![], time_manager, vec![]);
+
+        // Exécuter l'événement sans crash
+        event.execute(&mut monde);
+    }
+
+    #[test]
+    fn test_evenement_est_bien_resolu() {
+        let event = Evenement::new(
+            3,
+            0,
+            EventType::ScheduledMeeting,
+            Some(EventData {
+                description: "Rencontre programmée".to_string(),
+                _target_id: None,
+            }),
+        );
+
+        let lieu = Lieu::new(0, "Test Lieu", "Lieu test.", PlaceType::Neutral, vec![]);
+        let time_manager = GestionnaireDeTemps::new(0, 1440);
+        let mut monde = Monde::new(vec![lieu], vec![], time_manager, vec![event]);
+
+        assert_eq!(monde.events.len(), 1);
+
+        // Simuler une mise à jour qui devrait résoudre l'événement
+        monde.update();
+
+        // Après la mise à jour, la liste des événements doit être vide
+        assert_eq!(monde.events.len(), 0);
+}
+
+-------------------------
+test/game_engine_test.rs
+-------------------------
+
+    use rpg_textuel::game_engine::moteur_de_jeu::{MoteurDeJeu, MenuPrincipal};
+    use rpg_textuel::characters::joueur::Joueur;
+    use rpg_textuel::world::monde::Monde;
+    use rpg_textuel::world::lieu::Lieu;
+    use rpg_textuel::world::gestionnaire_de_temps::GestionnaireDeTemps;
+    use rpg_textuel::progression::progression::Progression;
+    use rpg_textuel::utils::types_enums::{PlaceType, Sex, CharacterState, PathType, EventType};
+    use rpg_textuel::events::evenement::{Evenement, EventData};
+    use rpg_textuel::items::inventaire::Inventaire;
+
+    #[test]
+    fn test_moteur_de_jeu_initialisation() {
+        let lieu = Lieu::new(0, "Maison", "Votre maison", PlaceType::Safe, vec![]);
+        let time_manager = GestionnaireDeTemps::new(0, 1440);
+        let monde = Monde::new(vec![lieu], vec![], time_manager, vec![]);
+
+        let joueur = Joueur {
+            name: "Testeur".to_string(),
+            sex: Sex::Male,
+            age: 25,
+            health: 100,
+            hunger: 50,
+            power: 30,
+            aura: 10,
+            money: 200,
+            state: CharacterState::Normal,
+            inventory: Inventaire::new(),
+            current_place: 0,
+            experience: 0,
+            level: 1,
+            current_progress: Progression::new(PathType::Neutral, 0, 10),
+            bank_balance: 0,
+        };
+
+        let moteur = MoteurDeJeu::new(monde, joueur);
+
+        assert!(moteur.is_running);
+        assert_eq!(moteur.current_menu, MenuPrincipal::Accueil);
+        assert!(moteur.history.is_empty());
+    }
+
+    #[test]
+    fn test_moteur_de_jeu_arret() {
+        let monde = Monde::new(vec![], vec![], GestionnaireDeTemps::new(0, 1440), vec![]);
+        let joueur = Joueur {
+            name: "Testeur".to_string(),
+            sex: Sex::Male,
+            age: 20,
+            health: 100,
+            hunger: 0,
+            power: 10,
+            aura: 5,
+            money: 50,
+            state: CharacterState::Normal,
+            inventory: Inventaire::new(),
+            current_place: 0,
+            experience: 0,
+            level: 1,
+            current_progress: Progression::new(PathType::Legal, 0, 10),
+            bank_balance: 0,
+        };
+
+        let mut moteur = MoteurDeJeu::new(monde, joueur);
+        moteur.stop();
+
+        assert!(!moteur.is_running);
+    }
+
+    #[test]
+    fn test_moteur_de_jeu_deplacement() {
+        let lieu_depart = Lieu::new(0, "Maison", "Départ", PlaceType::Safe, vec![1]);
+        let lieu_arrivee = Lieu::new(1, "Ville", "Destination", PlaceType::Neutral, vec![0]);
+        let time_manager = GestionnaireDeTemps::new(0, 1440);
+        let monde = Monde::new(vec![lieu_depart, lieu_arrivee], vec![], time_manager, vec![]);
+
+        let joueur = Joueur {
+            name: "Testeur".to_string(),
+            sex: Sex::Male,
+            age: 20,
+            health: 100,
+            hunger: 0,
+            power: 10,
+            aura: 5,
+            money: 50,
+            state: CharacterState::Normal,
+            inventory: Inventaire::new(),
+            current_place: 0,
+            experience: 0,
+            level: 1,
+            current_progress: Progression::new(PathType::Neutral, 0, 10),
+            bank_balance: 0,
+        };
+
+        let mut moteur = MoteurDeJeu::new(monde, joueur);
+
+        // Simuler qu'on a affiché les lieux connectés
+        moteur.current_connected_places = vec![1];
+
+        // Simuler la sélection du déplacement vers la Ville
+        moteur.gerer_menu_deplacement("1".to_string());
+
+        assert_eq!(moteur.player.current_place, 1);
+        assert_eq!(moteur.current_menu, MenuPrincipal::Accueil);
+    }
+
+    #[test]
+    fn test_moteur_de_jeu_mise_a_jour_et_mort() {
+        let monde = Monde::new(vec![], vec![], GestionnaireDeTemps::new(0, 1440), vec![]);
+
+        let joueur = Joueur {
+            name: "Testeur".to_string(),
+            sex: Sex::Male,
+            age: 20,
+            health: 0, // déjà mort
+            hunger: 0,
+            power: 10,
+            aura: 5,
+            money: 50,
+            state: CharacterState::Normal,
+            inventory: Inventaire::new(),
+            current_place: 0,
+            experience: 0,
+            level: 1,
+            current_progress: Progression::new(PathType::Neutral, 0, 10),
+            bank_balance: 0,
+        };
+
+        let mut moteur = MoteurDeJeu::new(monde, joueur);
+
+        moteur.mettre_a_jour();
+
+        assert!(!moteur.is_running);
+    }
+
+    #[test]
+    fn test_get_scenario_file() {
+        let monde = Monde::new(vec![], vec![], GestionnaireDeTemps::new(0, 1440), vec![]);
+
+        let joueur = Joueur {
+            name: "Testeur".to_string(),
+            sex: Sex::Male,
+            age: 20,
+            health: 100,
+            hunger: 0,
+            power: 10,
+            aura: 5,
+            money: 50,
+            state: CharacterState::Normal,
+            inventory: Inventaire::new(),
+            current_place: 2, // Banque
+            experience: 0,
+            level: 1,
+            current_progress: Progression::new(PathType::Neutral, 0, 10),
+            bank_balance: 0,
+        };
+
+        let moteur = MoteurDeJeu::new(monde, joueur);
+
+        let path = moteur.get_scenario_file();
+        assert_eq!(path, "scenarios/bank.xml");
+}
+
+-------------------------
+test/items_test.rs
+-------------------------
+    use rpg_textuel::items::inventaire::Inventaire;
+    use rpg_textuel::items::objet::Objet;
+    use rpg_textuel::characters::personnage::{Effect, ItemType, Personnage};
+    use rpg_textuel::characters::joueur::Joueur;
+    use rpg_textuel::progression::progression::Progression;
+    use rpg_textuel::utils::types_enums::{PathType, Sex, CharacterState};
+        
+    #[test]
+    fn test_inventaire_add_and_contains() {
+        let mut inventaire = Inventaire::new();
+        let objet = Objet {
+            id: 1,
+            name: "Potion de soin".to_string(),
+            description: "Restaure la santé.".to_string(),
+            item_type: ItemType::Food,
+            value: 10,
+            effects: Some(Effect::Heal(20)),
+        };
+
+        inventaire.add_item(objet.clone());
+        assert!(inventaire.contains_item(1));
+    }
+
+    #[test]
+    fn test_inventaire_remove() {
+        let mut inventaire = Inventaire::new();
+        let objet = Objet {
+            id: 2,
+            name: "Épée rouillée".to_string(),
+            description: "Pas très efficace, mais mieux que rien.".to_string(),
+            item_type: ItemType::Weapon,
+            value: 50,
+            effects: None,
+        };
+
+        inventaire.add_item(objet.clone());
+        let removed = inventaire.remove_item(2);
+        assert!(removed.is_some());
+        assert_eq!(removed.unwrap().name, "Épée rouillée");
+        assert!(!inventaire.contains_item(2));
+    }
+
+    #[test]
+    fn test_objet_use_item_heal() {
+        let mut joueur = create_test_joueur();
+        let objet = Objet {
+            id: 3,
+            name: "Potion de soin majeure".to_string(),
+            description: "Restaure beaucoup de santé.".to_string(),
+            item_type: ItemType::Food,
+            value: 25,
+            effects: Some(Effect::Heal(50)),
+        };
+
+        joueur.set_health(40);
+        objet.use_item(&mut joueur);
+        assert_eq!(joueur.get_health(), 90);
+    }
+
+    #[test]
+    fn test_objet_use_item_damage() {
+        let mut joueur = create_test_joueur();
+        let objet = Objet {
+            id: 4,
+            name: "Potion empoisonnée".to_string(),
+            description: "Fait perdre de la santé.".to_string(),
+            item_type: ItemType::Food,
+            value: 15,
+            effects: Some(Effect::Damage(30)),
+        };
+
+        joueur.set_health(100);
+        objet.use_item(&mut joueur);
+        assert_eq!(joueur.get_health(), 70);
+    }
+
+    #[test]
+    fn test_objet_use_item_hunger() {
+        let mut joueur = create_test_joueur();
+        let objet = Objet {
+            id: 5,
+            name: "Sandwich".to_string(),
+            description: "Nourrit et restaure un peu de santé.".to_string(),
+            item_type: ItemType::Food,
+            value: 5,
+            effects: None,
+        };
+
+        joueur.set_hunger(20);
+        objet.use_item(&mut joueur);
+        assert_eq!(joueur.get_hunger(), 10);
+    }
+
+    // ====================
+    // Fonctions utilitaires pour les tests
+    // ====================
+    fn create_test_joueur() -> Joueur {
+        Joueur {
+            name: "Testeur".to_string(),
+            sex: Sex::Male,
+            age: 25,
+            health: 100,
+            hunger: 50,
+            power: 20,
+            aura: 15,
+            money: 200,
+            state: CharacterState::Normal,
+            inventory: Inventaire::new(),
+            current_place: 0,
+            experience: 0,
+            level: 1,
+            current_progress: Progression::new(PathType::Neutral, 0, 10),
+            bank_balance: 0,
+        }
+}
+
+-------------------------
+test/scenario_test.rs
+-------------------------
+    use rpg_textuel::scenario::scenarios::{ScenarioManager, Scenario};
+    use rpg_textuel::characters::joueur::Joueur;
+    use rpg_textuel::items::inventaire::Inventaire;
+    use rpg_textuel::progression::progression::Progression;
+    use rpg_textuel::utils::types_enums::{Sex, CharacterState, PathType};
+    use rpg_textuel::characters::personnage::Personnage;
+
+
+    #[test]
+    fn test_scenario_manager_load() {
+        let manager = ScenarioManager::load_from_file("scenarios/city.xml");
+        assert!(!manager.scenarios.is_empty());
+    }
+
+    #[test]
+    fn test_get_first_scenario() {
+        let manager = ScenarioManager::load_from_file("scenarios/city.xml");
+        let scenario = manager.get_current_scenario();
+        assert!(scenario.is_some());
+    }
+
+    #[test]
+    fn test_set_and_get_specific_scenario() {
+        let mut manager = ScenarioManager::load_from_file("scenarios/city.xml");
+
+        manager.set_current_scenario("aller_boulangerie".to_string());
+        let scenario = manager.get_current_scenario();
+
+        assert!(scenario.is_some());
+        assert_eq!(scenario.unwrap().id, "aller_boulangerie");
+    }
+
+    #[test]
+    fn test_apply_effects_health() {
+        let mut joueur = create_test_joueur();
+        let scenario = Scenario {
+            id: "test_effect".to_string(),
+            description: "Test scénario avec effet de santé.".to_string(),
+            effects: vec!["health + 10".to_string()],
+            choices: vec![],
+        };
+
+        let manager = ScenarioManager {
+            scenarios: vec![scenario.clone()],
+            current_id: Some(scenario.id.clone()),
+        };
+
+        joueur.set_health(50);
+        manager.apply_effects(&mut joueur);
+        assert_eq!(joueur.get_health(), 60);
+    }
+
+    #[test]
+    fn test_apply_effects_money() {
+        let mut joueur = create_test_joueur();
+        let scenario = Scenario {
+            id: "test_money".to_string(),
+            description: "Test scénario avec effet d'argent.".to_string(),
+            effects: vec!["money + 100".to_string()],
+            choices: vec![],
+        };
+
+        let manager = ScenarioManager {
+            scenarios: vec![scenario.clone()],
+            current_id: Some(scenario.id.clone()),
+        };
+
+        joueur.money = 50;
+        manager.apply_effects(&mut joueur);
+        assert_eq!(joueur.money, 150);
+    }
+
+    // ========================================
+    // Fonction utilitaire pour initialiser un Joueur de test
+    // ========================================
+    fn create_test_joueur() -> Joueur {
+        Joueur {
+            name: "Testeur".to_string(),
+            sex: Sex::Male,
+            age: 25,
+            health: 100,
+            hunger: 50,
+            power: 20,
+            aura: 15,
+            money: 200,
+            state: CharacterState::Normal,
+            inventory: Inventaire::new(),
+            current_place: 0,
+            experience: 0,
+            level: 1,
+            current_progress: Progression::new(PathType::Neutral, 0, 10),
+            bank_balance: 0,
+        }
+}
+
+-------------------------
+test/utils_test.rs
+-------------------------
+    use rpg_textuel::utils::types_enums::{
+        PlaceType, NPCType, NPCState, CharacterState, ItemType, ActionType, EventType, PathType, Sex,
+    };
+
+    #[test]
+    fn test_place_type_enum() {
+        let safe = PlaceType::Safe;
+        let dangerous = PlaceType::Dangerous;
+        let neutral = PlaceType::Neutral;
+
+        assert_eq!(safe, PlaceType::Safe);
+        assert_eq!(dangerous, PlaceType::Dangerous);
+        assert_eq!(neutral, PlaceType::Neutral);
+    }
+
+    #[test]
+    fn test_npc_type_enum() {
+        let banker = NPCType::Banker;
+        let dealer = NPCType::Dealer;
+
+        assert_eq!(banker, NPCType::Banker);
+        assert_eq!(dealer, NPCType::Dealer);
+    }
+
+    #[test]
+    fn test_npc_state_enum() {
+        let idle = NPCState::Idle;
+        let attack = NPCState::Attack;
+
+        assert_eq!(idle, NPCState::Idle);
+        assert_eq!(attack, NPCState::Attack);
+    }
+
+    #[test]
+    fn test_character_state_enum() {
+        let normal = CharacterState::Normal;
+        let dead = CharacterState::Dead;
+
+        assert_eq!(normal, CharacterState::Normal);
+        assert_eq!(dead, CharacterState::Dead);
+    }
+
+    #[test]
+    fn test_item_type_enum() {
+        let food = ItemType::Food;
+        let weapon = ItemType::Weapon;
+
+        assert_eq!(food, ItemType::Food);
+        assert_eq!(weapon, ItemType::Weapon);
+    }
+
+    #[test]
+    fn test_action_type_enum() {
+        let walk = ActionType::Walk;
+        let fight = ActionType::Fight;
+
+        assert_eq!(walk, ActionType::Walk);
+        assert_eq!(fight, ActionType::Fight);
+    }
+
+    #[test]
+    fn test_event_type_enum() {
+        let random_encounter = EventType::RandomEncounter;
+        let police_raid = EventType::PoliceRaid;
+
+        assert_eq!(random_encounter, EventType::RandomEncounter);
+        assert_eq!(police_raid, EventType::PoliceRaid);
+    }
+
+    #[test]
+    fn test_path_type_enum() {
+        let legal = PathType::Legal;
+        let illegal = PathType::Illegal;
+        let neutral = PathType::Neutral;
+
+        assert_eq!(legal, PathType::Legal);
+        assert_eq!(illegal, PathType::Illegal);
+        assert_eq!(neutral, PathType::Neutral);
+    }
+
+    #[test]
+    fn test_sex_enum() {
+        let male = Sex::Male;
+        let female = Sex::Female;
+        let other = Sex::Other;
+
+        assert_eq!(male, Sex::Male);
+        assert_eq!(female, Sex::Female);
+        assert_eq!(other, Sex::Other);
+}

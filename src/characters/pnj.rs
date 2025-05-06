@@ -3,6 +3,7 @@ use crate::characters::personnage::{Personnage, Objet};
 use crate::items::inventaire::Inventaire;
 use crate::utils::types_enums::{Sex, CharacterState, NPCType, NPCState};
 use crate::characters::joueur::Joueur;
+use crate::utils::types_enums::ItemType;
 
 pub struct PNJ {
     pub name: String,
@@ -75,7 +76,7 @@ impl Personnage for PNJ {
                 crate::characters::personnage::Effect::Debuff => {}
             }
         }
-        if item.item_type == crate::characters::personnage::ItemType::Food {
+        if item.item_type == ItemType::Food {
             if self.hunger > 0 {
                 self.hunger -= 5;
                 if self.hunger < 0 {

@@ -1,6 +1,7 @@
 use crate::utils::types_enums::EventType;
 use crate::world::monde::Monde;
 
+#[derive(Clone)]
 pub struct EventData {
     pub description: String,
     pub _target_id: Option<usize>,

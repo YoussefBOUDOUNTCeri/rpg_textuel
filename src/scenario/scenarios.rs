@@ -4,6 +4,7 @@ use quick_xml::Reader;
 use quick_xml::events::Event;
 use crate::characters::joueur::Joueur;
 
+
 #[derive(Clone)]
 pub struct Choice {
     pub id: String,
@@ -41,7 +42,7 @@ impl ScenarioManager {
         let mut current_tag: Option<String> = None;
         let mut in_scenario = false;
         let mut in_effect = false;
-        let mut in_possible = false;
+        // let mut in_possible = false;
         let mut in_choice = false;
         loop {
             match reader.read_event_into(&mut buf) {
@@ -61,7 +62,7 @@ impl ScenarioManager {
                             in_effect = true;
                         }
                         Some("possible_scenario_id") => {
-                            in_possible = true;
+                            // in_possible = true;
                         }
                         Some("choice") => {
                             in_choice = true;
@@ -84,7 +85,7 @@ impl ScenarioManager {
                             in_effect = false;
                         }
                         "possible_scenario_id" => {
-                            in_possible = false;
+                            // in_possible = false;
                         }
                         "choice" => {
                             in_choice = false;
